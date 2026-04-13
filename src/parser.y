@@ -17,6 +17,11 @@ void yyerror(char const *s);
 
 %define parse.trace
 
+%union {
+    int ival;
+    char *sval;
+}
+
 %token PRINCIPAL
 %token IDENTIFICADOR
 %token INT
