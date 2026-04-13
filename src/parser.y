@@ -3,13 +3,19 @@
 #include <stdlib.h>
 #include <strings.h>
 
+#define DEBUG_STATUS 1
+
 extern int yylex();
 extern FILE * yyin;
 extern char * yytext;
 extern int yyleng;
+extern int yydebug;
+extern int yy_flex_debug;
 
 void yyerror(char const *s);
 %}
+
+%define parse.trace
 
 %token PRINCIPAL
 %token IDENTIFICADOR
@@ -115,6 +121,9 @@ int main(int argc, char** argv){
     if(!yyin) {
         yyerror("Arquivo não pode ser aberto!!!\n");
     }
+
+    yydebug = DEBUG_STATUS;
+    yy_flex_debug = DEBUG_STATUS;
 
     yyparse();
 }
