@@ -6,10 +6,10 @@ gv1: parser.o lexer.o
 	$(CC) -o gv1 obj/lexer.o obj/parser.o
 
 parser.o: parser.c
-	$(CC) -Iinclude -c -o obj/parser.o src/parser.c
+	$(CC) -I include -c -o obj/parser.o src/parser.c
 
 parser.c: src/parser.y
-	bison -H"include/tokens.h" -o src/parser.c src/parser.y
+	bison --header=include/tokens.h -o src/parser.c src/parser.y
 
 lexer.o: lexer.c
 	$(CC) -c -o obj/lexer.o src/lexer.c
