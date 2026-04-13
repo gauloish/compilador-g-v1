@@ -1,0 +1,5 @@
+include/*
+obj/*
+src/lexer.c
+src/parser.c
+gv1.exe
