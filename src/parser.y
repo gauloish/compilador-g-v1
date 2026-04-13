@@ -3,9 +3,10 @@
 #include <stdlib.h>
 #include <strings.h>
 
-extern char * yytext;
 extern int yylex();
 extern FILE * yyin;
+extern char * yytext;
+extern int yyleng;
 
 void yyerror(char const *s);
 %}
