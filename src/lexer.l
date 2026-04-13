@@ -1,13 +1,18 @@
 %{
+
 #include <stdlib.h>
 #include <stdio.h>
 #include "../include/tokens.h"
 
 #define SIZE 128
 
-extern void yyerror(const char* s);
+extern void yyerror(const char*);
+void format_lexical_error(const char*);
 
 char message[SIZE];
+
+// TODO: retirar os logs improvisados desse arquivo kk
+
 %}
 
 %option yylineno noyywrap
@@ -21,16 +26,17 @@ IDENTIFICADOR [[:alpha:]_][[:alnum:]_]*
 
 %%
 
-"/*" {BEGIN(comentario);}
+"/*" {printf("entrou no comentario\n"); BEGIN(comentario);}
+
 <comentario>{
-    [^*\n]* ;
-    "*"+[^/\n] ;
+    [^*\n]* printf("consumiu caracteres: %s\n", yytext);
+    "*"+[^/\n] printf("consumiu *\n");
     <<EOF>> {
-        snprintf(message, sizeof(message), "ERRO: COMENTARIO NAO TERMINA. LINHA: %d", yylineno);
+        format_lexical_error("COMENTARIO NAO TERMINA");
 	    yyerror(message);
     }
-    \n ;
-    "*"+"/" BEGIN(INITIAL);
+    \n printf("consumiu \\n\n");
+    "*"+"/" printf("encerrou comentario\n"); BEGIN(INITIAL);
 }
 
 "+"         {return '+';}
@@ -64,8 +70,12 @@ IDENTIFICADOR [[:alpha:]_][[:alnum:]_]*
 "fimse"     {return FIMSE;}
 "enquanto"  {return ENQUANTO;}
 
-\n ;
+\n printf("fudeu\n");
 
 [ \t]+ ;
 
 %%
+
+void format_lexical_error(const char* error_message) {
+    snprintf(message, sizeof(message), "ERRO: %s - LINHA: %d\n", error_message, yylineno);
+}
