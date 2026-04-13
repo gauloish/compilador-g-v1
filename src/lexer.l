@@ -11,11 +11,11 @@ void format_lexical_error(const char*);
 
 char message[SIZE];
 
-// TODO: retirar os logs improvisados desse arquivo kk
-
 %}
 
-%option yylineno noyywrap
+%option yylineno
+%option noyywrap
+%option debug
 
 CADEIACARACTERES ["][^\n]*["]
 CARCONST ['](.|[\n\t])[']
@@ -26,17 +26,17 @@ IDENTIFICADOR [[:alpha:]_][[:alnum:]_]*
 
 %%
 
-"/*" {printf("entrou no comentario\n"); BEGIN(comentario);}
+"/*" {BEGIN(comentario);}
 
 <comentario>{
-    [^*\n]* printf("consumiu caracteres: %s\n", yytext);
-    "*"+[^/\n] printf("consumiu *\n");
+    [^*\n]* ;
+    "*"+[^/\n] ;
     <<EOF>> {
         format_lexical_error("COMENTARIO NAO TERMINA");
 	    yyerror(message);
     }
-    \n printf("consumiu \\n\n");
-    "*"+"/" printf("encerrou comentario\n"); BEGIN(INITIAL);
+    \n ;
+    "*"+"/" BEGIN(INITIAL);
 }
 
 "+"         {return '+';}
@@ -70,7 +70,7 @@ IDENTIFICADOR [[:alpha:]_][[:alnum:]_]*
 "fimse"     {return FIMSE;}
 "enquanto"  {return ENQUANTO;}
 
-\n printf("fudeu\n");
+\n ;
 
 [ \t]+ ;
 
