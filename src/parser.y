@@ -20,6 +20,7 @@ void yyerror(char const *s);
 %union {
     long long ival;
     char *sval;
+    char cval;
 }
 
 %token PRINCIPAL
