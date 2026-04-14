@@ -18,7 +18,7 @@ void yyerror(char const *s);
 %define parse.trace
 
 %union {
-    int ival;
+    long long ival;
     char *sval;
 }
 

@@ -2,12 +2,19 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <errno.h>
+#include <limits.h>
+#include <stdbool.h>
+
 #include "../include/tokens.h"
 
 #define SIZE 128
 
 extern void yyerror(const char*);
+
 void format_lexical_error(const char*);
+char* copy_string(const char*);
+long long convert_strin_to_integer(const char*);
 
 char message[SIZE];
 
@@ -17,10 +24,11 @@ char message[SIZE];
 %option noyywrap
 %option debug
 
-CADEIACARACTERES ["][^\n]*["]
-CARCONST ['](.|[\n\t])[']
-INTCONST [+-]?[[:digit:]]+
-IDENTIFICADOR [[:alpha:]_][[:alnum:]_]*
+_CADEIACARACTERES ["][^\n]*["]
+_CARCONST ['](.|[\n\t])[']
+
+DIGIT [[:digit:]]
+ID [[:alpha:]_][[:alnum:]_]*
 
 %x comentario
 
@@ -47,6 +55,7 @@ IDENTIFICADOR [[:alpha:]_][[:alnum:]_]*
 "}"         {return '}';}
 "("         {return '(';}
 ")"         {return ')';}
+","         {return ',';}
 ";"         {return ';';}
 ":"         {return ':';}
 "!"         {return '!';}
@@ -70,6 +79,16 @@ IDENTIFICADOR [[:alpha:]_][[:alnum:]_]*
 "fimse"     {return FIMSE;}
 "enquanto"  {return ENQUANTO;}
 
+{DIGIT}+ {
+    yylval.ival = convert_strin_to_integer(yytext);
+    return INT;
+}
+
+{ID} {
+    yylval.sval = "temp_str";
+    return IDENTIFICADOR;
+}
+
 \n ;
 
 [ \t]+ ;
@@ -78,4 +97,25 @@ IDENTIFICADOR [[:alpha:]_][[:alnum:]_]*
 
 void format_lexical_error(const char* error_message) {
     snprintf(message, sizeof(message), "ERRO: %s - LINHA: %d\n", error_message, yylineno);
+}
+
+long long convert_strin_to_integer(const char* string) {
+    char *end;
+    errno = 0;
+
+    long long value = strtoll(string, &end, 10);
+
+    if (errno == ERANGE) {
+        // overflow ou underflow;
+    }
+
+    if (end == string) {
+        // nenhum inteiro foi lido
+    }
+
+    if (*end != '\0') {
+        // verifica se o lexema é realmente um inteiro
+    }
+
+    return value;
 }
