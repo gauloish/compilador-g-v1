@@ -2,16 +2,18 @@ CC = gcc
 OBJ_DIR = obj
 INC_DIR = include
 
+all: gv1
+
 gv1: parser.o lexer.o
 	$(CC) -o gv1 obj/lexer.o obj/parser.o
 
-parser.o: parser.c
+parser.o: $(OBJ_DIR) parser.c
 	$(CC) -I include -c -o obj/parser.o src/parser.c
 
-parser.c: src/parser.y
+parser.c: $(INC_DIR) src/parser.y
 	bison --header=include/tokens.h -o src/parser.c src/parser.y
 
-lexer.o: lexer.c
+lexer.o: $(OBJ_DIR) lexer.c
 	$(CC) -c -o obj/lexer.o src/lexer.c
 
 lexer.c: src/lexer.l
