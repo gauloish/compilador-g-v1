@@ -81,7 +81,7 @@ ID [[:alpha:]_][[:alnum:]_]*
 
 {DIGIT}+ {
     yylval.ival = convert_strin_to_integer(yytext);
-    return INT;
+    return INTCONST;
 }
 
 {ID} {
