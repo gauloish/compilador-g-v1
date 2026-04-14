@@ -3,7 +3,8 @@
 #include <stdlib.h>
 #include <strings.h>
 
-#define DEBUG_STATUS 1
+#define DEBUG_OFF 0
+#define DEBUG_ON  1
 
 extern int yylex();
 extern FILE * yyin;
@@ -22,6 +23,8 @@ void yyerror(char const *s);
     char *sval;
     char cval;
 }
+
+/* %destructor { free($$); } <sval> */
 
 %token PRINCIPAL
 %token IDENTIFICADOR
@@ -120,21 +123,22 @@ PrimExpr     : IDENTIFICADOR
 int main(int argc, char** argv){
     if(argc != 2) {
         yyerror("Uso correto: ./gv1 nome_arquivo\n");
+        exit(1);
     }
 
     yyin = fopen(argv[1], "r");
 
     if(!yyin) {
         yyerror("Arquivo não pode ser aberto!!!\n");
+        exit(1);
     }
 
-    yydebug = DEBUG_STATUS;
-    yy_flex_debug = DEBUG_STATUS;
+    yydebug = DEBUG_ON;
+    yy_flex_debug = DEBUG_ON;
 
     yyparse();
 }
 
 void yyerror(char const *s) {
     printf(s);
-    exit(1);
 }

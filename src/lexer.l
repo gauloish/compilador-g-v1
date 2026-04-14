@@ -41,9 +41,6 @@ void string_end();
 %option noyywrap
 %option debug
 
-_CADEIACARACTERES ["][^\n]*["]
-_CARCONST ['](.|[\n\t])[']
-
 DIGIT [[:digit:]]
 ID [[:alpha:]_][[:alnum:]_]*
 
@@ -65,10 +62,12 @@ ID [[:alpha:]_][[:alnum:]_]*
     "*"+"/" BEGIN(INITIAL);
 }
 
+
+
 \" {BEGIN(cadeiacaracteres);}
 
 <cadeiacaracteres>{
-    [^\\\n\"]+ {
+    [^"\\\n\t\r]+ {
         printf("AIN BOLSONARO 22: %s\n", yytext);
     }
     <<EOF>> {
@@ -86,6 +85,35 @@ ID [[:alpha:]_][[:alnum:]_]*
         printf("AIN BOLSONARO: %s\n", yytext);
         return CADEIACARACTERES;
     }
+}
+
+
+
+'([^'\\]|\\.)' {
+    if (yytext[0] == '\\') {
+        switch (yytext[1]) {
+            case 'n':
+                yylval.cval = '\n';
+                break;
+            case 't':
+                yylval.cval = '\t';
+                break;
+            case 'r':
+                yylval.cval = '\r';
+                break;
+            case '\\':
+                yylval.cval = '\\';
+                break;
+            default:
+                // TODO: sei la mano
+                break;
+        }
+    }
+    else {
+        yylval.cval = yytext[0];
+    }
+
+    return CARCONST;
 }
 
 "+"         {return '+';}
@@ -112,6 +140,7 @@ ID [[:alpha:]_][[:alnum:]_]*
 "principal" {return PRINCIPAL;}
 "int"       {return INT;}
 "car"       {return CAR;}
+"leia"      {return LEIA;}
 "escreva"   {return ESCREVA;}
 "novalinha" {return NOVALINHA;}
 "se"        {return SE;}
