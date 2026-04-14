@@ -16,7 +16,24 @@ void format_lexical_error(const char*);
 char* copy_string(const char*);
 long long convert_strin_to_integer(const char*);
 
-char message[SIZE];
+char status_message[SIZE];
+
+/* Processamento das strings */
+typedef struct {
+    char* data;
+    size_t length;
+    size_t capacity;
+} String;
+
+String string_buffer = {
+    .data = NULL,
+    .length = 0,
+    .capacity = 0,
+};
+
+void string_begin();
+void string_append(char);
+void string_end();
 
 %}
 
@@ -31,6 +48,7 @@ DIGIT [[:digit:]]
 ID [[:alpha:]_][[:alnum:]_]*
 
 %x comentario
+%x cadeiacaracteres
 
 %%
 
@@ -41,10 +59,33 @@ ID [[:alpha:]_][[:alnum:]_]*
     "*"+[^/\n] ;
     <<EOF>> {
         format_lexical_error("COMENTARIO NAO TERMINA");
-	    yyerror(message);
+	    yyerror(status_message);
     }
     \n ;
     "*"+"/" BEGIN(INITIAL);
+}
+
+\" {BEGIN(cadeiacaracteres);}
+
+<cadeiacaracteres>{
+    [^\\\n\"]+ {
+        printf("AIN BOLSONARO 22: %s\n", yytext);
+    }
+    <<EOF>> {
+        format_lexical_error("CADEIA DE CARACTERES NAO TERMINA");
+	    yyerror(status_message);
+    }
+    \n {
+        format_lexical_error("CADEIA DE CARACTERES OCUPA MAIS DE UMA LINHA");
+	    yyerror(status_message);
+    }
+    \" {
+        // TODO: alocar memoria para a string e retornar ela para o bison e a AST
+        BEGIN(INITIAL);
+        yylval.sval = "temp_string";
+        printf("AIN BOLSONARO: %s\n", yytext);
+        return CADEIACARACTERES;
+    }
 }
 
 "+"         {return '+';}
@@ -85,7 +126,8 @@ ID [[:alpha:]_][[:alnum:]_]*
 }
 
 {ID} {
-    yylval.sval = "temp_str";
+    // TODO: fazer a alocação dinamica do identificador para a AST
+    yylval.sval = "temp_id";
     return IDENTIFICADOR;
 }
 
@@ -96,7 +138,7 @@ ID [[:alpha:]_][[:alnum:]_]*
 %%
 
 void format_lexical_error(const char* error_message) {
-    snprintf(message, sizeof(message), "ERRO: %s - LINHA: %d\n", error_message, yylineno);
+    snprintf(status_message, sizeof(status_message), "ERRO: %s - LINHA: %d\n", error_message, yylineno);
 }
 
 long long convert_strin_to_integer(const char* string) {
@@ -104,7 +146,8 @@ long long convert_strin_to_integer(const char* string) {
     errno = 0;
 
     long long value = strtoll(string, &end, 10);
-
+    
+    // TODO: tratar esses erros aqui
     if (errno == ERANGE) {
         // overflow ou underflow;
     }
@@ -118,4 +161,19 @@ long long convert_strin_to_integer(const char* string) {
     }
 
     return value;
+}
+
+void string_begin() {
+    string_buffer.capacity = 32;
+    string_buffer.length = 0;
+
+    if (string_buffer.data != NULL) {
+        free(string_buffer.data);
+    }
+
+    string_buffer.data = (char*) malloc(string_buffer.capacity);
+}
+
+void string_append(char c) {
+    
 }
