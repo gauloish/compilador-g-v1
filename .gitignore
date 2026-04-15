@@ -1,4 +1,4 @@
-include/*
+include/tokens.h
 obj/*
 src/lexer.c
 src/parser.c
