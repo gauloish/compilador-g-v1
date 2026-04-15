@@ -13,27 +13,9 @@
 extern void yyerror(const char*);
 
 void format_lexical_error(const char*);
-char* copy_string(const char*);
-long long convert_strin_to_integer(const char*);
+long long string_to_integer(const char*);
 
 char status_message[SIZE];
-
-/* Processamento das strings */
-typedef struct {
-    char* data;
-    size_t length;
-    size_t capacity;
-} String;
-
-String string_buffer = {
-    .data = NULL,
-    .length = 0,
-    .capacity = 0,
-};
-
-void string_begin();
-void string_append(char);
-void string_end();
 
 %}
 
@@ -62,13 +44,11 @@ ID [[:alpha:]_][[:alnum:]_]*
     "*"+"/" BEGIN(INITIAL);
 }
 
-
-
 \" {BEGIN(cadeiacaracteres);}
 
 <cadeiacaracteres>{
-    [^"\\\n\t\r]+ {
-        printf("AIN BOLSONARO 22: %s\n", yytext);
+    [^"\n]+ {
+        yylval.sval = strdup(yytext);
     }
     <<EOF>> {
         format_lexical_error("CADEIA DE CARACTERES NAO TERMINA");
@@ -81,13 +61,9 @@ ID [[:alpha:]_][[:alnum:]_]*
     \" {
         // TODO: alocar memoria para a string e retornar ela para o bison e a AST
         BEGIN(INITIAL);
-        yylval.sval = "temp_string";
-        printf("AIN BOLSONARO: %s\n", yytext);
         return CADEIACARACTERES;
     }
 }
-
-
 
 '([^'\\]|\\.)' {
     if (yytext[0] == '\\') {
@@ -150,13 +126,12 @@ ID [[:alpha:]_][[:alnum:]_]*
 "enquanto"  {return ENQUANTO;}
 
 {DIGIT}+ {
-    yylval.ival = convert_strin_to_integer(yytext);
+    yylval.ival = string_to_integer(yytext);
     return INTCONST;
 }
 
 {ID} {
-    // TODO: fazer a alocação dinamica do identificador para a AST
-    yylval.sval = "temp_id";
+    yylval.sval = strdup(yytext);
     return IDENTIFICADOR;
 }
 
@@ -164,13 +139,20 @@ ID [[:alpha:]_][[:alnum:]_]*
 
 [ \t]+ ;
 
+<<EOF>> {return (EOF);}
+
+. {
+    format_lexical_error("CARACTERE INVALIDO");
+    yyerror(status_message);
+}
+
 %%
 
 void format_lexical_error(const char* error_message) {
     snprintf(status_message, sizeof(status_message), "ERRO: %s - LINHA: %d\n", error_message, yylineno);
 }
 
-long long convert_strin_to_integer(const char* string) {
+long long string_to_integer(const char* string) {
     char *end;
     errno = 0;
 
@@ -190,19 +172,4 @@ long long convert_strin_to_integer(const char* string) {
     }
 
     return value;
-}
-
-void string_begin() {
-    string_buffer.capacity = 32;
-    string_buffer.length = 0;
-
-    if (string_buffer.data != NULL) {
-        free(string_buffer.data);
-    }
-
-    string_buffer.data = (char*) malloc(string_buffer.capacity);
-}
-
-void string_append(char c) {
-    
 }
