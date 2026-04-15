@@ -28,5 +28,7 @@ $(OBJ_DIR):
 $(INC_DIR):
 	mkdir -p $(INC_DIR)
 
+# TODO: create a flag for ast compilation
+
 clean:
 	rm gv1 gv1.exe include/tokens.h obj/*.o src/lexer.c src/parser.c
