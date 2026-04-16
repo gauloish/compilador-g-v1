@@ -17,7 +17,6 @@ void yyerror(char const *s);
     int ival;
     char cval;
     char *sval;
-    Node *node;
 }
 
 %start Program
