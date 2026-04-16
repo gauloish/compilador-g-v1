@@ -44,9 +44,7 @@ ID [[:alpha:]_][[:alnum:]_]*
 
 <cadeiacaracteres>{
     ([^\\\"\n]|\\.)*\" {
-        printf("opa = %s\n", yytext);
         yylval.lexeme = copy_substring(yytext, true, 0, strlen(yytext) - 2);
-        printf("line = %d, string = '%s'\n", yylineno, yylval.lexeme);
         BEGIN(INITIAL);
         return CADEIACARACTERES;
     }
@@ -62,7 +60,6 @@ ID [[:alpha:]_][[:alnum:]_]*
 
 '([^\'\\]|\\.)' {
     yylval.lexeme = copy_substring(yytext, true, 1, strlen(yytext) - 2);
-    printf("line = %d, char = %s\n", yylineno, yylval.lexeme);
     return CARCONST;
 }
 
@@ -101,13 +98,11 @@ ID [[:alpha:]_][[:alnum:]_]*
 
 {DIGIT}+ {
     yylval.lexeme = copy_substring(yytext, false, 0, strlen(yytext) - 1);
-    printf("line = %d, int = %s\n", yylineno, yylval.lexeme);
     return INTCONST;
 }
 
 {ID} {
     yylval.lexeme = copy_substring(yytext, false, 0, strlen(yytext) - 1);
-    printf("line = %d, id = %s\n", yylineno, yylval.lexeme);
     return IDENTIFICADOR;
 }
 
