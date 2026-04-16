@@ -3,6 +3,7 @@
 #include "../include/ast.h"
 
 extern void yyerror(const char*);
+extern int yylineno;
 
 enum _Type {
     OPA,
@@ -17,7 +18,7 @@ struct _Node {
     int line;
 };
 
-Node* create_node(Type type, Node* left, Node* middle, Node* right, char* lexeme, int line) {
+Node* create_node(Type type, Node* left, Node* middle, Node* right, char* lexeme) {
     Node* node = (Node*)malloc(sizeof(Node));
 
     if (node == NULL) {
@@ -30,7 +31,7 @@ Node* create_node(Type type, Node* left, Node* middle, Node* right, char* lexeme
         .middle = middle,
         .right = right,
         .lexeme = lexeme,
-        .line = line,
+        .line = yylineno,
     };
 
     return node;

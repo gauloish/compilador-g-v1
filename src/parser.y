@@ -7,6 +7,7 @@
 extern int yylex();
 extern char * yytext;
 extern int yyleng;
+extern int yylineno;
 
 void yyerror(char const *s);
 %}
@@ -14,13 +15,10 @@ void yyerror(char const *s);
 %define parse.trace
 
 %union {
-    int ival;
-    char cval;
-    char *sval;
+    char* lexeme;
 }
 
-%start Program
-
+%start Programa
 
 %token PRINCIPAL
 %token IDENTIFICADOR
@@ -49,34 +47,34 @@ void yyerror(char const *s);
 Programa     : DeclPrograma                                      {root = $1;}
              ;
 
-DeclPrograma : PRINCIPAL Bloco                                   {$$ = $1;}
+DeclPrograma : PRINCIPAL Bloco                                   {$$ = $2;}
              ;
 
-Bloco        : '{' ListaComando '}'                              {$$ = $1;}
-             | VarSection '{' ListaComando '}'                   {$$ = create_node(OPA, None, 0, $1, $2, NULL);}
+Bloco        : '{' ListaComando '}'                              {$$ = $2;}
+             | VarSection '{' ListaComando '}'                   {$$ = create_node(OPA, $1, $3, NULL, NULL);}
              ;
 
-VarSection   : '{' ListaDeclVar '}'                              {$$ = $1;}
+VarSection   : '{' ListaDeclVar '}'                              {$$ = $2;}
              ;
 
-ListaDeclVar : IDENTIFICADOR DeclVar ':' Tipo ';' ListaDeclVar   {$$ = create_node(OPA, None, 0, $1, $2, $3);}
-             | IDENTIFICADOR DeclVar ':' Tipo ';'                {$$ = create_node(OPA, None, 0, $1, $2, NULL);}
+ListaDeclVar : IDENTIFICADOR DeclVar ':' Tipo ';' ListaDeclVar   {$$ = create_node(OPA, $2, $4, $6, NULL);}
+             | IDENTIFICADOR DeclVar ':' Tipo ';'                {$$ = create_node(OPA, $2, $4, NULL, NULL);}
              ;
 
 DeclVar      : %empty                                            {$$ = NULL;}
-             | ',' IDENTIFICADOR DeclVar                         {$$ = create(OPA, None, 0, $1, NULL, NULL);}
+             | ',' IDENTIFICADOR DeclVar                         {$$ = create_node(OPA, $3, NULL, NULL, NULL);}
              ;
 
-Tipo         : INT {$$ = create(OPA, None, 0, $1, NULL, NULL);}
-             | CAR {$$ = create(OPA, None, 0, $1, NULL, NULL);}
+Tipo         : INT {$$ = create_node(OPA, $1, NULL, NULL, NULL);}
+             | CAR {$$ = create_node(OPA, $1, NULL, NULL, NULL);}
              ;
 
-ListaComando : Comando
-             | Comando ListaComando
+ListaComando : Comando {$$ = create_node(OPA, $1, NULL, NULL, NULL);}
+             | Comando ListaComando {$$ = create_node(OPA, $1, $2, NULL, NULL);}
              ;
 
-Comando      : ';'
-             | Expr ';'
+Comando      : ';' {$$ = NULL}
+             | Expr ';' {$$ = create_node(OPA, $1, NULL, NULL, NULL);}
              | LEIA IDENTIFICADOR ';'
              | ESCREVA Expr ';'
              | ESCREVA CADEIACARACTERES ';'
@@ -134,7 +132,7 @@ PrimExpr     : IDENTIFICADOR
 
 %%
 
-void yyerror(char const *s) {
-    // TODO: desalocar toda memória alocada.
-    printf(s);
+void yyerror(char const *error) {
+    perror(error);
+    exit(EXIT_FAILURE);
 }
