@@ -2,48 +2,35 @@
 
 #include "../include/ast.h"
 
-// TODO: implement the structs, enums and methods
-enum _Kind {
-    OPA
-};
+extern void yyerror(const char*);
 
 enum _Type {
-    Integer,
-    Character,
-    String,
-    None,
-};
-
-union _Value {
-    int integer;
-    char character;
-    char* string;
+    OPA,
 };
 
 struct _Node {
-    Kind kind;
     Type type;
-    Value value;
-    int line;
     Node* left;
     Node* middle;
     Node* right;
+    char* lexeme;
+    int line;
 };
 
-Node* create_node(Kind kind, Type type, Value value, Node* left, Node* middle, Node* right) {
-    Node* node = NULL;
+Node* create_node(Type type, Node* left, Node* middle, Node* right, char* lexeme, int line) {
+    Node* node = (Node*)malloc(sizeof(Node));
 
-    while (node == NULL) {
-        node = (Node*)malloc(sizeof(Node));
+    if (node == NULL) {
+        yyerror("MEMÓRIA INDISPONÍVEL!!!\n");
     }
 
     *node = (Node){
-        .kind = kind,
         .type = type,
-        .value = value,
         .left = left,
         .middle = middle,
-        .right = right
+        .right = right,
+        .lexeme = lexeme,
+        .line = line,
     };
 
     return node;
