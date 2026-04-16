@@ -1,9 +1,7 @@
 %{
-
 #include <stdlib.h>
 #include <stdio.h>
-#include <errno.h>
-#include <limits.h>
+#include <string.h>
 #include <stdbool.h>
 
 #include "../include/tokens.h"
@@ -12,11 +10,10 @@
 
 extern void yyerror(const char*);
 
-void format_lexical_error(const char*);
-long long string_to_integer(const char*);
+void format_error(const char*);
+char* copy_substring(const char*, bool, int, int);
 
 char status_message[SIZE];
-
 %}
 
 %option yylineno
@@ -34,61 +31,38 @@ ID [[:alpha:]_][[:alnum:]_]*
 "/*" {BEGIN(comentario);}
 
 <comentario>{
-    [^*\n]* ;
-    "*"+[^/\n] ;
+    [^\*]* ;
+    "*"+[^/] ;
     <<EOF>> {
-        format_lexical_error("COMENTARIO NAO TERMINA");
+        format_error("COMENTARIO NAO TERMINA");
 	    yyerror(status_message);
     }
-    \n ;
     "*"+"/" BEGIN(INITIAL);
 }
 
 \" {BEGIN(cadeiacaracteres);}
 
 <cadeiacaracteres>{
-    [^"\n]+ {
-        yylval.sval = strdup(yytext);
-    }
-    <<EOF>> {
-        format_lexical_error("CADEIA DE CARACTERES NAO TERMINA");
-	    yyerror(status_message);
-    }
-    \n {
-        format_lexical_error("CADEIA DE CARACTERES OCUPA MAIS DE UMA LINHA");
-	    yyerror(status_message);
-    }
-    \" {
-        // TODO: alocar memoria para a string e retornar ela para o bison e a AST
+    ([^\\\"\n]|\\.)*\" {
+        printf("opa = %s\n", yytext);
+        yylval.lexeme = copy_substring(yytext, true, 0, strlen(yytext) - 2);
+        printf("line = %d, string = '%s'\n", yylineno, yylval.lexeme);
         BEGIN(INITIAL);
         return CADEIACARACTERES;
     }
+    <<EOF>> {
+        format_error("CADEIA DE CARACTERES NAO TERMINA");
+	    yyerror(status_message);
+    }
+    [\n] {
+        format_error("CADEIA DE CARACTERES OCUPA MAIS DE UMA LINHA");
+	    yyerror(status_message);
+    }
 }
 
-'([^'\\]|\\.)' {
-    if (yytext[0] == '\\') {
-        switch (yytext[1]) {
-            case 'n':
-                yylval.cval = '\n';
-                break;
-            case 't':
-                yylval.cval = '\t';
-                break;
-            case 'r':
-                yylval.cval = '\r';
-                break;
-            case '\\':
-                yylval.cval = '\\';
-                break;
-            default:
-                // TODO: sei la mano
-                break;
-        }
-    }
-    else {
-        yylval.cval = yytext[0];
-    }
-
+'([^\'\\]|\\.)' {
+    yylval.lexeme = copy_substring(yytext, true, 1, strlen(yytext) - 2);
+    printf("line = %d, char = %s\n", yylineno, yylval.lexeme);
     return CARCONST;
 }
 
@@ -126,12 +100,14 @@ ID [[:alpha:]_][[:alnum:]_]*
 "enquanto"  {return ENQUANTO;}
 
 {DIGIT}+ {
-    yylval.ival = string_to_integer(yytext);
+    yylval.lexeme = copy_substring(yytext, false, 0, strlen(yytext) - 1);
+    printf("line = %d, int = %s\n", yylineno, yylval.lexeme);
     return INTCONST;
 }
 
 {ID} {
-    yylval.sval = strdup(yytext);
+    yylval.lexeme = copy_substring(yytext, false, 0, strlen(yytext) - 1);
+    printf("line = %d, id = %s\n", yylineno, yylval.lexeme);
     return IDENTIFICADOR;
 }
 
@@ -140,34 +116,54 @@ ID [[:alpha:]_][[:alnum:]_]*
 <<EOF>> {return (EOF);}
 
 . {
-    format_lexical_error("CARACTERE INVALIDO");
+    format_error("CARACTERE INVALIDO");
     yyerror(status_message);
 }
 
 %%
 
-void format_lexical_error(const char* error_message) {
+void format_error(const char* error_message) {
     snprintf(status_message, sizeof(status_message), "ERRO: %s - LINHA: %d\n", error_message, yylineno);
 }
 
-long long string_to_integer(const char* string) {
-    char *end;
-    errno = 0;
+char* copy_substring(const char* string, bool escape, int left, int right) {
+    int lenght = strlen(string);
+    char* copy = (char*)malloc(lenght + 1);
 
-    long long value = strtoll(string, &end, 10);
-    
-    // TODO: tratar esses erros aqui
-    if (errno == ERANGE) {
-        // overflow ou underflow;
+    if (copy == NULL) {
+        yyerror("MEMÓRIA INDISPONÍVEL!!!\n");
     }
 
-    if (end == string) {
-        // nenhum inteiro foi lido
+    for (int i = 0; i <= lenght; i++) {
+        copy[i] = '\0';
     }
 
-    if (*end != '\0') {
-        // verifica se o lexema é realmente um inteiro
+    for (int i = 0, j = left; j <= right && i <= lenght; i++, j++) {
+        if (yytext[j] == '\\' && j + 1 <= right) {
+            switch (yytext[j + 1]) {
+                case '\\':
+                    copy[i] = '\\';
+                    break;
+                case 'n':
+                    copy[i] = '\n';
+                    break;
+                case 't':
+                    copy[i] = '\t';
+                    break;
+                case '\"':
+                    copy[i] = '\"';
+                    break;
+                default:
+                    copy[i] = string[j];
+                    continue;
+            }
+
+            j++;
+        }
+        else {
+            copy[i] = yytext[j];
+        }
     }
 
-    return value;
+    return copy;
 }
