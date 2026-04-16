@@ -135,9 +135,7 @@ ID [[:alpha:]_][[:alnum:]_]*
     return IDENTIFICADOR;
 }
 
-\n ;
-
-[ \t]+ ;
+[ \n\t]+ ;
 
 <<EOF>> {return (EOF);}
 
