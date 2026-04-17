@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "../include/memory.h"
+
 #define DEBUG_OFF 0
 #define DEBUG_ON  1
 
@@ -24,6 +26,8 @@ int main(int argc, char** argv){
     yydebug = DEBUG_OFF;
     yy_flex_debug = DEBUG_OFF;
 
+    begin_memory();
     yyparse();
     fclose(yyin);
+    end_memory();
 }

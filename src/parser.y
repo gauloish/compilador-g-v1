@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "../include/ast.h"
+#include "../include/memory.h"
 
 extern int yylex();
 extern char * yytext;
