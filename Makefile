@@ -1,33 +1,28 @@
-CC = gcc
-OBJ_DIR = obj
+COMPILER = gcc
+NAME = gv1
+OBJECTS_DIR = obj
+INCLUDE = -I"include/"
+FILES = memory syntax_tree lexer parser main
 
-all: gv1
+SOURCES = $(FILES:%=src/%.c)
+OBJECTS = $(FILES:%=obj/%.o)
 
-gv1: parser.o lexer.o ast.o main.o
-	$(CC) -o gv1 obj/main.o obj/lexer.o obj/parser.o
+all: main
 
-parser.o: $(OBJ_DIR) parser.c
-	$(CC) -I include -c -o obj/parser.o src/parser.c
+main: parser.c lexer.c $(OBJECTS)
+	$(COMPILER) $(INCLUDE) -o $(NAME) $(OBJECTS)
+
+obj/%.o: src/%.c | $(OBJECTS_DIR)
+	$(COMPILER) $(INCLUDE) -c -o $@ $<
 
 parser.c: src/parser.y
 	bison --header=include/tokens.h -o src/parser.c src/parser.y
 
-lexer.o: $(OBJ_DIR) lexer.c
-	$(CC) -c -o obj/lexer.o src/lexer.c
-
 lexer.c: src/lexer.l
 	flex -o src/lexer.c src/lexer.l
 
-ast.o:
-	$(CC) -I include -c -o obj/ast.o src/ast.c
-
-main.o:
-	$(CC) -c -o obj/main.o src/main.c
-
-$(OBJ_DIR):
-	mkdir -p $(OBJ_DIR)
-
-# TODO: create a flag for ast compilation
+$(OBJECTS_DIR):
+	mkdir -p $(OBJECTS_DIR)
 
 clean:
-	rm gv1 gv1.exe include/tokens.h obj/*.o src/lexer.c src/parser.c
+	rm gv1 gv1.exe include/tokens.h obj/*.o src/{lexer,parser}.c
