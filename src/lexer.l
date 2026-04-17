@@ -5,15 +5,12 @@
 #include <stdbool.h>
 
 #include "../include/tokens.h"
-
-#define SIZE 128
+#include "../include/memory.h"
 
 extern void yyerror(const char*);
 
-void format_error(const char*);
 char* copy_substring(const char*, bool, int, int);
-
-char status_message[SIZE];
+int line = 1;
 %}
 
 %option yylineno
@@ -28,19 +25,24 @@ ID [[:alpha:]_][[:alnum:]_]*
 
 %%
 
-"/*" {BEGIN(comentario);}
+"/*" {
+    line = yylineno;
+    BEGIN(comentario);
+}
 
 <comentario>{
     [^\*]* ;
     "*"+[^/] ;
     <<EOF>> {
-        format_error("COMENTARIO NAO TERMINA");
-	    yyerror(status_message);
+        yyerror("COMENTARIO NAO TERMINA");
     }
     "*"+"/" BEGIN(INITIAL);
 }
 
-\" {BEGIN(cadeiacaracteres);}
+"\"" {
+    line = yylineno;
+    BEGIN(cadeiacaracteres);
+}
 
 <cadeiacaracteres>{
     ([^\\\"\n]|\\.)*\" {
@@ -49,13 +51,12 @@ ID [[:alpha:]_][[:alnum:]_]*
         return CADEIACARACTERES;
     }
     <<EOF>> {
-        format_error("CADEIA DE CARACTERES NAO TERMINA");
-	    yyerror(status_message);
+        yyerror("CADEIA DE CARACTERES NAO TERMINA");
     }
     [\n] {
-        format_error("CADEIA DE CARACTERES OCUPA MAIS DE UMA LINHA");
-	    yyerror(status_message);
+        yyerror("CADEIA DE CARACTERES OCUPA MAIS DE UMA LINHA");
     }
+    . ;
 }
 
 '([^\'\\]|\\.)' {
@@ -108,25 +109,30 @@ ID [[:alpha:]_][[:alnum:]_]*
 
 [ \n\t]+ ;
 
-<<EOF>> {return (EOF);}
+<<EOF>> {return EOF;}
 
 . {
-    format_error("CARACTERE INVALIDO");
-    yyerror(status_message);
+    line = yylineno;
+    yyerror("CARACTERE INVALIDO");
 }
 
 %%
 
-void format_error(const char* error_message) {
-    snprintf(status_message, sizeof(status_message), "ERRO: %s - LINHA: %d\n", error_message, yylineno);
-}
-
+/**
+ * @brief Copy a substring of a string
+ * 
+ * @param string String to be copied
+ * @param escape If true, process the escape characters.
+ * @param left Initial position in string to be copied (begin of substring)
+ * @param right Final position in string to be copied (end of substring)
+ * @return char* The substring of string copied in new allocated memory block
+ */
 char* copy_substring(const char* string, bool escape, int left, int right) {
     int lenght = strlen(string);
-    char* copy = (char*)malloc(lenght + 1);
+    char* copy = (char*)allocate_memory(lenght + 1);
 
     if (copy == NULL) {
-        yyerror("MEMÓRIA INDISPONÍVEL!!!\n");
+        yyerror("MEMÓRIA INDISPONÍVEL!!!");
     }
 
     for (int i = 0; i <= lenght; i++) {

@@ -13,6 +13,8 @@ extern int yyparse();
 extern void yyerror(char const *);
 
 int main(int argc, char** argv){
+    begin_memory();
+
     if (argc != 2) {
         yyerror("Uso correto: ./gv1 nome_arquivo\n");
     }
@@ -26,8 +28,8 @@ int main(int argc, char** argv){
     yydebug = DEBUG_OFF;
     yy_flex_debug = DEBUG_OFF;
 
-    begin_memory();
     yyparse();
     fclose(yyin);
+    
     end_memory();
 }

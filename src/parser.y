@@ -2,18 +2,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../include/ast.h"
 #include "../include/memory.h"
+#include "../include/syntax_tree.h"
 
 extern int yylex();
-extern char * yytext;
+extern char* yytext;
 extern int yyleng;
 extern int yylineno;
+extern int line;
 
-void yyerror(char const *s);
+void yyerror(const char*);
 %}
 
 %define parse.trace
+%define parse.error detailed
 
 %union {
     char* lexeme;
@@ -21,61 +23,61 @@ void yyerror(char const *s);
 
 %start Programa
 
-%token PRINCIPAL
-%token IDENTIFICADOR
-%token INT
-%token CAR
-%token LEIA
-%token ESCREVA
-%token NOVALINHA
-%token SE
-%token ENTAO
-%token SENAO
-%token FIMSE
-%token ENQUANTO
-%token CADEIACARACTERES
-%token OU
-%token E
-%token IGUAL
-%token DIFERENTE
-%token MAIORIGUAL
-%token MENORIGUAL
-%token CARCONST
-%token INTCONST
+%token PRINCIPAL        "'principal'"
+%token IDENTIFICADOR    "'identificador'"
+%token INT              "'int'"
+%token CAR              "'car'"
+%token LEIA             "'leia'"
+%token ESCREVA          "'escreva'"
+%token NOVALINHA        "'novalinha'"
+%token SE               "'se'"
+%token ENTAO            "'entao'"
+%token SENAO            "'senao'"
+%token FIMSE            "'fimse'"
+%token ENQUANTO         "'enquanto'"
+%token CADEIACARACTERES "literal de 'cadeia de caracteres'"
+%token OU               "'ou'"
+%token E                "'e'"
+%token IGUAL            "'='"
+%token DIFERENTE        "'!='"
+%token MAIORIGUAL       "'>='"
+%token MENORIGUAL       "'<='"
+%token CARCONST         "literal de 'caractere'"
+%token INTCONST         "literal de 'inteiro'"
 
 %%
 
-Programa     : DeclPrograma                                      {root = $1;}
+Programa     : DeclPrograma
              ;
 
-DeclPrograma : PRINCIPAL Bloco                                   {$$ = $2;}
+DeclPrograma : PRINCIPAL Bloco
              ;
 
-Bloco        : '{' ListaComando '}'                              {$$ = $2;}
-             | VarSection '{' ListaComando '}'                   {$$ = create_node(OPA, $1, $3, NULL, NULL);}
+Bloco        : '{' ListaComando '}'
+             | VarSection '{' ListaComando '}'
              ;
 
-VarSection   : '{' ListaDeclVar '}'                              {$$ = $2;}
+VarSection   : '{' ListaDeclVar '}'
              ;
 
-ListaDeclVar : IDENTIFICADOR DeclVar ':' Tipo ';' ListaDeclVar   {$$ = create_node(OPA, $2, $4, $6, NULL);}
-             | IDENTIFICADOR DeclVar ':' Tipo ';'                {$$ = create_node(OPA, $2, $4, NULL, NULL);}
+ListaDeclVar : IDENTIFICADOR DeclVar ':' Tipo ';' ListaDeclVar
+             | IDENTIFICADOR DeclVar ':' Tipo ';'
              ;
 
-DeclVar      : %empty                                            {$$ = NULL;}
-             | ',' IDENTIFICADOR DeclVar                         {$$ = create_node(OPA, $3, NULL, NULL, NULL);}
+DeclVar      : %empty
+             | ',' IDENTIFICADOR DeclVar
              ;
 
-Tipo         : INT {$$ = create_node(OPA, $1, NULL, NULL, NULL);}
-             | CAR {$$ = create_node(OPA, $1, NULL, NULL, NULL);}
+Tipo         : INT
+             | CAR
              ;
 
-ListaComando : Comando {$$ = create_node(OPA, $1, NULL, NULL, NULL);}
-             | Comando ListaComando {$$ = create_node(OPA, $1, $2, NULL, NULL);}
+ListaComando : Comando
+             | Comando ListaComando
              ;
 
-Comando      : ';' {$$ = NULL}
-             | Expr ';' {$$ = create_node(OPA, $1, NULL, NULL, NULL);}
+Comando      : ';'
+             | Expr ';'
              | LEIA IDENTIFICADOR ';'
              | ESCREVA Expr ';'
              | ESCREVA CADEIACARACTERES ';'
@@ -133,7 +135,15 @@ PrimExpr     : IDENTIFICADOR
 
 %%
 
-void yyerror(char const *error) {
-    perror(error);
+/**
+ * @brief Print the error, free the allocated memory and exit program
+ * 
+ * @param error Error to be printed
+ */
+void yyerror(const char *error) {
+    end_memory();
+
+    fprintf(stderr, "ERRO: %s - LINHA: %d\n", error, line);
+    
     exit(EXIT_FAILURE);
 }
