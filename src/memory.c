@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 
@@ -15,7 +14,7 @@ struct _MemoryNode {
     MemoryNode* next;
 };
 
-MemoryNode* node;
+MemoryNode* node = NULL;
 
 /**
  * @brief Initialize the global memory list
@@ -51,6 +50,8 @@ void end_memory(void) {
 
         node = next;
     }
+
+    node = NULL;
 }
 
 /**
