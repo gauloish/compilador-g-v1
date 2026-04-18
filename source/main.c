@@ -6,7 +6,7 @@
 #define DEBUG_OFF 0
 #define DEBUG_ON  1
 
-extern FILE * yyin;
+extern FILE* yyin;
 extern int yydebug;
 extern int yy_flex_debug;
 extern int yyparse();
@@ -16,13 +16,13 @@ int main(int argc, char** argv){
     begin_memory();
 
     if (argc != 2) {
-        yyerror("Uso correto: ./gv1 nome_arquivo\n");
+        yyerror("Uso correto: ./gv1 nome_arquivo");
     }
 
     yyin = fopen(argv[1], "r");
 
     if (!yyin) {
-        yyerror("Arquivo não pode ser aberto!!!\n");
+        yyerror("Arquivo não pode ser aberto!!!");
     }
 
     yydebug = DEBUG_OFF;
