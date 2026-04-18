@@ -1,6 +1,6 @@
 include/tokens.h
-obj/*
-src/lexer.c
-src/parser.c
+objects/*
+source/lexer.c
+source/parser.c
 gv1.exe
 gv1
