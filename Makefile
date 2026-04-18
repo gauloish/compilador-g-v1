@@ -1,6 +1,6 @@
 COMPILER = gcc
 NAME = gv1
-OBJECTS_DIR = obj
+OBJECTS_DIR = objects
 INCLUDE = -I"include/"
 FILES = memory syntax_tree lexer parser main
 
@@ -19,7 +19,7 @@ parser.c: source/parser.y
 	bison --header=include/tokens.h -o source/parser.c source/parser.y
 
 lexer.c: source/lexer.l
-	flex -o src/lexer.c src/lexer.l
+	flex -o source/lexer.c source/lexer.l
 
 $(OBJECTS_DIR):
 	mkdir -p $(OBJECTS_DIR)
