@@ -1,5 +1,5 @@
 COMPILER = gcc
-NAME = gv1
+NAME = g-v1
 OBJECTS_DIR = objects
 INCLUDE = -I"include/"
 FILES = memory syntax_tree lexer parser main
@@ -9,20 +9,20 @@ OBJECTS = $(FILES:%=objects/%.o)
 
 all: main
 
-main: parser.c lexer.c $(OBJECTS)
+main: source/parser.c source/lexer.c $(OBJECTS)
 	$(COMPILER) $(INCLUDE) -o $(NAME) $(OBJECTS)
 
 objects/%.o: source/%.c | $(OBJECTS_DIR)
 	$(COMPILER) $(INCLUDE) -c -o $@ $<
 
-parser.c: source/parser.y
+source/parser.c: source/parser.y
 	bison --header=include/tokens.h -o source/parser.c source/parser.y
 
-lexer.c: source/lexer.l
+source/lexer.c: source/lexer.l
 	flex -o source/lexer.c source/lexer.l
 
 $(OBJECTS_DIR):
 	mkdir -p $(OBJECTS_DIR)
 
 clean:
-	rm gv1 gv1.exe include/tokens.h objects/*.o source/{lexer,parser}.c
+	rm g-v1 g-v1.exe include/tokens.h objects/*.o source/lexer.c source/parser.c
