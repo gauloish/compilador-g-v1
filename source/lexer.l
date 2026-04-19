@@ -5,9 +5,11 @@
 #include <stdbool.h>
 
 #include "../include/tokens.h"
+#include "../include/syntax_tree.h"
 #include "../include/memory.h"
 
 extern void yyerror(const char*);
+extern bool analysis_error;
 
 char* copy_substring(const char*, bool, int, int);
 int line = 1;
@@ -34,7 +36,7 @@ ID [[:alpha:]_][[:alnum:]_]*
     [^\*]* ;
     "*"+[^/] ;
     <<EOF>> {
-        yyerror("COMENTARIO NAO TERMINA");
+        yyerror("Cometário não termina");
     }
     "*"+"/" BEGIN(INITIAL);
 }
@@ -51,10 +53,10 @@ ID [[:alpha:]_][[:alnum:]_]*
         return CADEIACARACTERES;
     }
     <<EOF>> {
-        yyerror("CADEIA DE CARACTERES NAO TERMINA");
+        yyerror("Cadeia de caracteres nao termina");
     }
     [\n] {
-        yyerror("CADEIA DE CARACTERES OCUPA MAIS DE UMA LINHA");
+        yyerror("Cadeia de caracteres ocupa mais de uma linha");
     }
     . ;
 }
@@ -62,6 +64,10 @@ ID [[:alpha:]_][[:alnum:]_]*
 '([^\'\\]|\\.)' {
     yylval.lexeme = copy_substring(yytext, true, 1, strlen(yytext) - 2);
     return CARCONST;
+}
+
+'.*' {
+    yyerror("Caractere com mais de um símbolo");
 }
 
 "+"         {return '+';}
@@ -113,7 +119,7 @@ ID [[:alpha:]_][[:alnum:]_]*
 
 . {
     line = yylineno;
-    yyerror("CARACTERE INVALIDO");
+    yyerror("Caractere inválido");
 }
 
 %%
@@ -132,7 +138,8 @@ char* copy_substring(const char* string, bool escape, int left, int right) {
     char* copy = (char*)allocate_memory(lenght + 1);
 
     if (copy == NULL) {
-        yyerror("MEMÓRIA INDISPONÍVEL!!!");
+        analysis_error = false;
+        yyerror("Memória indisponível!!!");
     }
 
     for (int i = 0; i <= lenght; i++) {

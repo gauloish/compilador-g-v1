@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include "../include/memory.h"
 
@@ -11,12 +12,14 @@ extern int yydebug;
 extern int yy_flex_debug;
 extern int yyparse();
 extern void yyerror(char const *);
+extern int analysis_error;
 
 int main(int argc, char** argv){
     begin_memory();
 
     if (argc != 2) {
-        yyerror("Uso correto: ./gv1 nome_arquivo");
+        analysis_error = false;
+        yyerror("Uso correto \"./gv1 nome_arquivo\"!!!");
     }
 
     yyin = fopen(argv[1], "r");
