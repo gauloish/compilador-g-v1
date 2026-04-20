@@ -19,7 +19,6 @@ bool analysis_error = true;
 
 %define parse.trace
 %define parse.error custom
-// %define parse.lac full
 
 %locations
 
