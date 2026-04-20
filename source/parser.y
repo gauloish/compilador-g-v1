@@ -10,7 +10,6 @@ extern int yylex();
 extern char* yytext;
 extern int yyleng;
 extern int yylineno;
-extern int line;
 
 void yyerror(const char*);
 
@@ -20,11 +19,17 @@ bool analysis_error = true;
 
 %define parse.trace
 %define parse.error custom
-%define parse.lac full
+// %define parse.lac full
+
+%locations
+
+%code requires {
+    #include "../include/syntax_tree.h"
+}
 
 %union {
     char* lexeme;
-    struct _TreeNode* node;
+    TreeNode* node;
 }
 
 %start Programa
@@ -514,7 +519,7 @@ void yyerror(const char *error) {
     end_memory();
 
     if (analysis_error) {
-        fprintf(stderr, "ERRO: %s - LINHA: %d\n", error, line);
+        fprintf(stderr, "ERRO: %s - LINHA: %d, COLUNA: %d\n", error, yylloc.first_line, yylloc.first_column);
     }
     else {
         fprintf(stderr, "ERRO: %s\n", error);
@@ -540,24 +545,23 @@ int yyreport_syntax_error(const yypcontext_t *context) {
     yysymbol_kind_t expected[TOKENMAX];
 
     int n = yypcontext_expected_tokens(context, expected, TOKENMAX);
+    int offset = 0;
 
     if (n == 0) {
         if (lookahead == YYSYMBOL_YYEMPTY) {
-            snprintf(message, sizeof(message), "algo inesperado ocorreu");
+            offset += snprintf(message + offset, sizeof(message) - offset, "Algo inesperado ocorreu");
         }
         else if (lookahead == YYSYMBOL_YYEOF) {
-            snprintf(message, sizeof(message), "fim de arquivo inesperado");
+            offset += snprintf(message + offset, sizeof(message) - offset, "Fim de arquivo inesperado");
         }
         else {
-            snprintf(message, sizeof(message), "termo %s inesperado", yysymbol_name(lookahead));
+            offset += snprintf(message + offset, sizeof(message) - offset, "Termo %s inesperado", yysymbol_name(lookahead));
         }
     }
     else {
-        int offset = 0;
-
         for (int i = 0; i < n; i++) {
             if (i == 0) {
-                offset += snprintf(message + offset, sizeof(message) - offset, "%s %s", "espera-se", yysymbol_name(expected[i]));
+                offset += snprintf(message + offset, sizeof(message) - offset, "%s %s", "Espera-se", yysymbol_name(expected[i]));
             }
             else {
                 offset += snprintf(message + offset, sizeof(message) - offset, "%s %s", " ou", yysymbol_name(expected[i]));
@@ -569,7 +573,19 @@ int yyreport_syntax_error(const yypcontext_t *context) {
                 offset += snprintf(message + offset, sizeof(message) - offset, " antes do fim de arquivo");
             }
             else {
-                offset += snprintf(message + offset, sizeof(message) - offset, " antes de %s", yysymbol_name(lookahead));
+                bool has_lexeme = (
+                    (lookahead == YYSYMBOL_IDENTIFICADOR) ||
+                    (lookahead == YYSYMBOL_CADEIACARACTERES) ||
+                    (lookahead == YYSYMBOL_INTCONST) ||
+                    (lookahead == YYSYMBOL_CARCONST)
+                );
+
+                if (has_lexeme) {
+                    offset += snprintf(message + offset, sizeof(message) - offset, " antes de %s (valor: '%s')", yysymbol_name(lookahead), yytext);
+                }
+                else {
+                    offset += snprintf(message + offset, sizeof(message) - offset, " antes de %s", yysymbol_name(lookahead));
+                }
             }
         }
     }

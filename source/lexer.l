@@ -12,7 +12,20 @@ extern void yyerror(const char*);
 extern bool analysis_error;
 
 char* copy_substring(const char*, bool, int, int);
-int line = 1;
+
+#define YY_USER_ACTION                        \
+    yylloc.first_line = yylloc.last_line;     \
+    yylloc.first_column = yylloc.last_column; \
+    for (int i = 0; i < yyleng; i++) {        \
+        if (yytext[i] == '\n') {              \
+            yylloc.last_line++;               \
+            yylloc.last_column = 1;           \
+        }                                     \
+        else {                                \
+            yylloc.last_column++;             \
+        }                                     \
+    }                                         \
+
 %}
 
 %option yylineno
@@ -28,7 +41,6 @@ ID [[:alpha:]_][[:alnum:]_]*
 %%
 
 "/*" {
-    line = yylineno;
     BEGIN(comentario);
 }
 
@@ -42,7 +54,6 @@ ID [[:alpha:]_][[:alnum:]_]*
 }
 
 "\"" {
-    line = yylineno;
     BEGIN(cadeiacaracteres);
 }
 
@@ -118,7 +129,6 @@ ID [[:alpha:]_][[:alnum:]_]*
 <<EOF>> {return EOF;}
 
 . {
-    line = yylineno;
     yyerror("Caractere inválido");
 }
 
