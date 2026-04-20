@@ -22,11 +22,9 @@ bool analysis_error = true;
 %define parse.error custom
 %define parse.lac full
 
-%locations
-
 %union {
     char* lexeme;
-    struct TreeNode* node;
+    struct _TreeNode* node;
 }
 
 %start Programa
@@ -49,107 +47,460 @@ bool analysis_error = true;
 %token MAIORIGUAL       "'>='"
 %token MENORIGUAL       "'<='"
 
-%token IDENTIFICADOR    "'identificador'"
-%token CADEIACARACTERES "literal de 'cadeia de caracteres'"
-%token CARCONST         "literal de 'caractere'"
-%token INTCONST         "literal de 'inteiro'"
+%token <lexeme> IDENTIFICADOR    "'identificador'"
+%token <lexeme> CADEIACARACTERES "literal de 'cadeia de caracteres'"
+%token <lexeme> CARCONST         "literal de 'caractere'"
+%token <lexeme> INTCONST         "literal de 'inteiro'"
 
-// %token <lexeme> IDENTIFICADOR    "'identificador'"
-// %token <lexeme> CADEIACARACTERES "literal de 'cadeia de caracteres'"
-// %token <lexeme> CARCONST         "literal de 'caractere'"
-// %token <lexeme> INTCONST         "literal de 'inteiro'"
-
-// %type <node> Programa DeclPrograma Bloco
-// %type <node> VarSection ListaDeclVar DeclVar Tipo
-// %type <node> Comando ListaComando
-// %type <node> Expr OrExpr AndExpr EqExpr DesigExpr AddExpr MulExpr UnExpr PrimExpr
+%type <node> Programa DeclPrograma Bloco
+%type <node> VarSection ListaDeclVar DeclVar Tipo
+%type <node> Comando ListaComando
+%type <node> Expr OrExpr AndExpr EqExpr DesigExpr AddExpr MulExpr UnExpr PrimExpr
 
 %%
 
-Programa     : DeclPrograma
+Programa     : DeclPrograma {
+                    tree = tree_create_node(
+                        TREE_NODE_PROGRAMA,
+                        TREE_NODE_NOTYPE,
+                        $1,
+                        NULL,
+                        NULL
+                    );
+                }
              ;
 
-DeclPrograma : PRINCIPAL Bloco
+DeclPrograma : PRINCIPAL Bloco {
+                    $$ = tree_create_node(
+                        TREE_NODE_DECL_PROGRAMA,
+                        TREE_NODE_NOTYPE,
+                        $2,
+                        NULL,
+                        NULL
+                    );
+                }
              ;
 
-Bloco        : '{' ListaComando '}'
-             | VarSection '{' ListaComando '}'
+Bloco        : '{' ListaComando '}' {
+                    $$ = tree_create_node(
+                        TREE_NODE_BLOCO,
+                        TREE_NODE_NOTYPE,
+                        $2,
+                        NULL,
+                        NULL
+                    );
+                }
+             | VarSection '{' ListaComando '}' {
+                    $$ = tree_create_node(
+                        TREE_NODE_BLOCO,
+                        TREE_NODE_NOTYPE,
+                        $3,
+                        $1,
+                        NULL
+                    );
+                }
              ;
 
-VarSection   : '{' ListaDeclVar '}'
+VarSection   : '{' ListaDeclVar '}' {
+                    $$ = tree_create_node(
+                        TREE_NODE_VAR_SECTION,
+                        TREE_NODE_NOTYPE,
+                        $2,
+                        NULL,
+                        NULL
+                    );
+                }
              ;
 
-ListaDeclVar : IDENTIFICADOR DeclVar ':' Tipo ';' ListaDeclVar
-             | IDENTIFICADOR DeclVar ':' Tipo ';'
+ListaDeclVar : IDENTIFICADOR DeclVar ':' Tipo ';' ListaDeclVar {
+                    TreeNodeDataType type = tree_get_node_data_type($4);
+
+                    TreeNode* node = tree_create_node(
+                        TREE_NODE_DECL_VAR,
+                        type,
+                        $2,
+                        NULL,
+                        $1
+                    );
+
+                    $$ = tree_create_node(
+                        TREE_NODE_LISTA_DECL_VAR,
+                        TREE_NODE_NOTYPE,
+                        node,
+                        $6,
+                        NULL
+                    );
+
+                    while (node != NULL) {
+                        tree_set_node_type(node, type);
+                        node = tree_get_node_left(node);
+                    }
+                }
+             | IDENTIFICADOR DeclVar ':' Tipo ';' {
+                    TreeNodeDataType type = tree_get_node_data_type($4);
+
+                    TreeNode* node = tree_create_node(
+                        TREE_NODE_DECL_VAR,
+                        type,
+                        $2,
+                        NULL,
+                        $1
+                    );
+
+                    $$ = tree_create_node(
+                        TREE_NODE_LISTA_DECL_VAR,
+                        TREE_NODE_NOTYPE,
+                        node,
+                        NULL,
+                        NULL
+                    );
+
+                    while (node != NULL) {
+                        tree_set_node_type(node, type);
+                        node = tree_get_node_left(node);
+                    }
+                }
              ;
 
-DeclVar      : %empty
-             | ',' IDENTIFICADOR DeclVar
+DeclVar      : %empty {
+                    $$ = NULL;
+                }
+             | ',' IDENTIFICADOR DeclVar {
+                    $$ = tree_create_node(
+                        TREE_NODE_DECL_VAR,
+                        TREE_NODE_NOTYPE,
+                        $3,
+                        NULL,
+                        $2
+                    );
+                }
              ;
 
-Tipo         : INT
-             | CAR
+Tipo         : INT {
+                    $$ = tree_create_node(
+                        TREE_NODE_INT,
+                        TREE_NODE_INTEGER,
+                        NULL,
+                        NULL,
+                        NULL
+                    );
+                }
+             | CAR {
+                    $$ = tree_create_node(
+                        TREE_NODE_CAR,
+                        TREE_NODE_CHARACTER,
+                        NULL,
+                        NULL,
+                        NULL
+                    );
+                }
              ;
 
-ListaComando : Comando
-             | Comando ListaComando
+ListaComando : Comando {
+                    $$ = tree_create_node(
+                        TREE_NODE_LISTA_COMANDO,
+                        TREE_NODE_NOTYPE,
+                        $1,
+                        NULL,
+                        NULL
+                    );
+                }
+             | Comando ListaComando {
+                    $$ = tree_create_node(
+                        TREE_NODE_LISTA_COMANDO,
+                        TREE_NODE_NOTYPE,
+                        $1,
+                        $2,
+                        NULL
+                    );
+             }
              ;
 
-Comando      : ';'
+Comando      : ';' {
+                    $$ = NULL;
+                }
              | Expr ';'
-             | LEIA IDENTIFICADOR ';'
-             | ESCREVA Expr ';'
-             | ESCREVA CADEIACARACTERES ';'
-             | NOVALINHA ';'
-             | SE '(' Expr ')' ENTAO Comando FIMSE
-             | SE '(' Expr ')' ENTAO Comando SENAO Comando FIMSE
-             | ENQUANTO '(' Expr ')' Comando
-             | Bloco
+             | LEIA IDENTIFICADOR ';' {
+                    $$ = tree_create_node(
+                        TREE_NODE_LEIA,
+                        TREE_NODE_NOTYPE,
+                        NULL,
+                        NULL,
+                        $2
+                    );
+                }
+             | ESCREVA Expr ';' {
+                    $$ = tree_create_node(
+                        TREE_NODE_ESCREVA_EXPRESSAO,
+                        TREE_NODE_NOTYPE,
+                        $2,
+                        NULL,
+                        NULL
+                    );
+                }
+             | ESCREVA CADEIACARACTERES ';' {
+                    $$ = tree_create_node(
+                        TREE_NODE_ESCREVA_CADEIACARACTERES,
+                        TREE_NODE_STRING,
+                        NULL,
+                        NULL,
+                        $2
+                    );
+                }
+             | NOVALINHA ';' {
+                    $$ = tree_create_node(
+                        TREE_NODE_NOVALINHA,
+                        TREE_NODE_NOTYPE,
+                        NULL,
+                        NULL,
+                        NULL
+                    );
+                }
+             | SE '(' Expr ')' ENTAO Comando FIMSE {
+                    $$ = tree_create_node(
+                        TREE_NODE_SE_ENTAO,
+                        TREE_NODE_NOTYPE,
+                        $3,
+                        $6,
+                        NULL
+                    );
+                }
+             | SE '(' Expr ')' ENTAO Comando SENAO Comando FIMSE {
+                    TreeNode* node = tree_create_node(
+                        TREE_NODE_ENTAO_SENAO,
+                        TREE_NODE_NOTYPE,
+                        $6,
+                        $8,
+                        NULL
+                    );
+
+                    $$ = tree_create_node(
+                        TREE_NODE_SE_ENTAO_SENAO,
+                        TREE_NODE_NOTYPE,
+                        $3,
+                        node,
+                        NULL
+                    );
+                }
+             | ENQUANTO '(' Expr ')' Comando {
+                    $$ = tree_create_node(
+                        TREE_NODE_ENQUANTO,
+                        TREE_NODE_NOTYPE,
+                        $3,
+                        $5,
+                        NULL
+                    );
+                }
+             | Bloco {
+                    $$ = $1;
+                }
              ;
 
-Expr         : OrExpr
-             | IDENTIFICADOR '=' Expr
+Expr         : OrExpr {
+                    $$ = $1;
+                }
+             | IDENTIFICADOR '=' Expr {
+                    $$  = tree_create_node(
+                        TREE_NODE_ASSIGN_EXPR,
+                        TREE_NODE_NOTYPE,
+                        $3,
+                        NULL,
+                        $1
+                    );
+                }
              ;
 
-OrExpr       : OrExpr OU AndExpr
-             | AndExpr
+OrExpr       : OrExpr OU AndExpr {
+                    $$ = tree_create_node(
+                        TREE_NODE_OR_EXPR,
+                        TREE_NODE_NOTYPE,
+                        $1,
+                        $3,
+                        NULL
+                    );
+                }
+             | AndExpr {
+                    $$ = $1;
+                }
              ;
 
-AndExpr      : AndExpr E EqExpr
-             | EqExpr
+AndExpr      : AndExpr E EqExpr {
+                    $$ = tree_create_node(
+                        TREE_NODE_AND_EXPR,
+                        TREE_NODE_NOTYPE,
+                        $1,
+                        $3,
+                        NULL
+                    );
+                }
+             | EqExpr {
+                    $$ = $1;
+                }
              ;
 
-EqExpr       : EqExpr IGUAL DesigExpr
-             | EqExpr DIFERENTE DesigExpr
-             | DesigExpr
+EqExpr       : EqExpr IGUAL DesigExpr {
+                    $$ = tree_create_node(
+                        TREE_NODE_EQ_EXPR,
+                        TREE_NODE_NOTYPE,
+                        $1,
+                        $3,
+                        NULL
+                    );
+                }
+             | EqExpr DIFERENTE DesigExpr {
+                    $$ = tree_create_node(
+                        TREE_NODE_NEQ_EXPR,
+                        TREE_NODE_NOTYPE,
+                        $1,
+                        $3,
+                        NULL
+                    );
+                }
+             | DesigExpr {
+                    $$ = $1;
+                }
              ;
 
-DesigExpr    : DesigExpr '<' AddExpr
-             | DesigExpr '>' AddExpr
-             | DesigExpr MAIORIGUAL AddExpr
-             | DesigExpr MENORIGUAL AddExpr
-             | AddExpr
+DesigExpr    : DesigExpr '<' AddExpr {
+                    $$ = tree_create_node(
+                        TREE_NODE_LE_EXPR,
+                        TREE_NODE_NOTYPE,
+                        $1,
+                        $3,
+                        NULL
+                    );
+                }
+             | DesigExpr '>' AddExpr {
+                    $$ = tree_create_node(
+                        TREE_NODE_GE_EXPR,
+                        TREE_NODE_NOTYPE,
+                        $1,
+                        $3,
+                        NULL
+                    );
+                }
+             | DesigExpr MENORIGUAL AddExpr {
+                    $$ = tree_create_node(
+                        TREE_NODE_LEQ_EXPR,
+                        TREE_NODE_NOTYPE,
+                        $1,
+                        $3,
+                        NULL
+                    );
+                }
+             | DesigExpr MAIORIGUAL AddExpr {
+                    $$ = tree_create_node(
+                        TREE_NODE_GEQ_EXPR,
+                        TREE_NODE_NOTYPE,
+                        $1,
+                        $3,
+                        NULL
+                    );
+                }
+             | AddExpr {
+                    $$ = $1;
+                }
              ;
 
-AddExpr      : AddExpr '+' MulExpr
-             | AddExpr '-' MulExpr
-             | MulExpr
+AddExpr      : AddExpr '+' MulExpr {
+                    $$ = tree_create_node(
+                        TREE_NODE_ADD_EXPR,
+                        TREE_NODE_NOTYPE,
+                        $1,
+                        $3,
+                        NULL
+                    );
+                }
+             | AddExpr '-' MulExpr {
+                    $$ = tree_create_node(
+                        TREE_NODE_SUB_EXPR,
+                        TREE_NODE_NOTYPE,
+                        $1,
+                        $3,
+                        NULL
+                    );
+                }
+             | MulExpr {
+                    $$ = $1;
+                }
              ;
 
-MulExpr      : MulExpr '*' UnExpr
-             | MulExpr '/' UnExpr
-             | UnExpr
+MulExpr      : MulExpr '*' UnExpr {
+                    $$ = tree_create_node(
+                        TREE_NODE_MUL_EXPR,
+                        TREE_NODE_NOTYPE,
+                        $1,
+                        $3,
+                        NULL
+                    );
+                }
+             | MulExpr '/' UnExpr {
+                    $$ = tree_create_node(
+                        TREE_NODE_DIV_EXPR,
+                        TREE_NODE_NOTYPE,
+                        $1,
+                        $3,
+                        NULL
+                    );
+                }
+             | UnExpr {
+                    $$ = $1;
+                }
              ;
 
-UnExpr       : '-' PrimExpr
-             | '!' PrimExpr
-             | PrimExpr
+UnExpr       : '-' PrimExpr {
+                    $$ = tree_create_node(
+                        TREE_NODE_MINUS_EXPR,
+                        TREE_NODE_NOTYPE,
+                        $2,
+                        NULL,
+                        NULL
+                    );
+                }
+             | '!' PrimExpr {
+                    $$ = tree_create_node(
+                        TREE_NODE_NEG_EXPR,
+                        TREE_NODE_NOTYPE,
+                        $2,
+                        NULL,
+                        NULL
+                    );
+                }
+             | PrimExpr {
+                    $$ = $1;
+                }
              ;
 
-PrimExpr     : IDENTIFICADOR
-             | CARCONST
-             | INTCONST
-             | '(' Expr ')'
+PrimExpr     : IDENTIFICADOR {
+                    $$ = tree_create_node(
+                        TREE_NODE_IDENTIFICADOR,
+                        TREE_NODE_NOTYPE,
+                        NULL,
+                        NULL,
+                        $1
+                    );
+                }
+             | CARCONST {
+                    $$ = tree_create_node(
+                        TREE_NODE_CARCONST,
+                        TREE_NODE_NOTYPE,
+                        NULL,
+                        NULL,
+                        $1
+                    );
+                }
+             | INTCONST {
+                    $$ = tree_create_node(
+                        TREE_NODE_INTCONST,
+                        TREE_NODE_NOTYPE,
+                        NULL,
+                        NULL,
+                        $1
+                    );
+                }
+             | '(' Expr ')' {
+                    $$ = $2;
+                }
              ;
 
 %%

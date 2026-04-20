@@ -1,37 +1,21 @@
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include "../include/memory.h"
 #include "../include/syntax_tree.h"
 
 extern void yyerror(const char*);
 extern int yylineno;
+extern bool analysis_error;
 
-/**
- * @brief Operation kind of node in Abstract Syntax Tree
- * 
- */
-enum _OperationKind {
-    OPA,
-};
-
-/**
- * @brief Enum of data/ID types in Abstract Syntax Tree
- * 
- */
-enum _DataType {
-    INTEGER,
-    CHARACTER,
-    STRING,
-    NONE,
-};
 
 /**
  * @brief Abstract Syntax Tree node struct
  * 
  */
 struct _TreeNode {
-    OperationKind kind;
-    DataType type;
+    TreeNodeKind kind;
+    TreeNodeDataType type;
     TreeNode* left;
     TreeNode* right;
     char* lexeme;
@@ -48,11 +32,18 @@ struct _TreeNode {
  * @param lexeme Lexeme for ID or literal data
  * @return TreeNode* A node for build Abstracted Syntax Tree
  */
-TreeNode* create_tree_node(OperationKind kind, DataType type, TreeNode* left, TreeNode* right, char* lexeme) {
+TreeNode* tree_create_node(
+    TreeNodeKind kind,
+    TreeNodeDataType type,
+    TreeNode* left,
+    TreeNode* right,
+    char* lexeme
+) {
     TreeNode* node = (TreeNode*) allocate_memory(sizeof(TreeNode));
 
     if (node == NULL) {
-        yyerror("MEMÓRIA INSUFICIENTE!!!\n");
+        analysis_error = false;
+        yyerror("Memória Insuficiente!!!\n");
     }
 
     *node = (TreeNode){
@@ -65,4 +56,87 @@ TreeNode* create_tree_node(OperationKind kind, DataType type, TreeNode* left, Tr
     };
 
     return node;
+}
+
+/**
+ * @brief Get node kind
+ *
+ * @param node Tree node
+ * @return Node kind
+ */
+TreeNodeKind tree_get_node_kind(TreeNode* node) {
+    if (node == NULL) {
+        return TREE_NODE_NOKIND;
+    }
+
+    return node->kind;
+}
+
+/**
+ * @brief Get node data type
+ *
+ * @param node Tree node
+ * @return Node data type
+ */
+TreeNodeDataType tree_get_node_data_type(TreeNode* node) {
+    if (node == NULL) {
+        return TREE_NODE_NOTYPE;
+    }
+
+    return node->type;
+}
+
+/**
+ * @brief Get node left
+ *
+ * @param node Tree node
+ * @return Node left
+ */
+TreeNode* tree_get_node_left(TreeNode* node) {
+    if (node == NULL) {
+        return NULL;
+    }
+
+    return node->left;
+}
+
+/**
+ * @brief Get node right
+ *
+ * @param node Tree node
+ * @return Node right
+ */
+TreeNode* tree_get_node_right(TreeNode* node) {
+    if (node == NULL) {
+        return NULL;
+    }
+
+    return node->right;
+}
+
+/**
+ * @brief Get node lexeme
+ *
+ * @param node Tree node
+ * @return Node lexeme
+ */
+char* tree_get_node_lexeme(TreeNode* node) {
+    if (node == NULL) {
+        return NULL;
+    }
+
+    return node->lexeme;
+}
+
+/**
+ * @brief Set node type
+ *
+ * @param node Tree node
+ */
+void tree_set_node_type(TreeNode* node, TreeNodeDataType type) {
+    if (node == NULL) {
+        return;
+    }
+
+    node->type = type;
 }
