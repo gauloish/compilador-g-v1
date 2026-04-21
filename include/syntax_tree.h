@@ -3,14 +3,15 @@
 
 typedef enum _TreeNodeKind TreeNodeKind;
 typedef enum _TreeNodeDataType TreeNodeDataType;
-
 typedef struct _TreeNode TreeNode;
 
-TreeNode* tree_node_create(TreeNodeKind, TreeNodeDataType, TreeNode*, TreeNode*, char*);
+TreeNode* tree_node_create(TreeNodeKind, TreeNodeDataType, TreeNode*, TreeNode*, char*, int, int);
 TreeNodeKind tree_node_get_kind(TreeNode*);
 TreeNodeDataType tree_node_get_data_type(TreeNode*);
 TreeNode* tree_node_get_left(TreeNode*);
 TreeNode* tree_node_get_right(TreeNode*);
+int tree_node_get_line(TreeNode*);
+int tree_node_get_column(TreeNode*);
 char* tree_node_get_lexeme(TreeNode*);
 void tree_node_set_type(TreeNode*, TreeNodeDataType);
 

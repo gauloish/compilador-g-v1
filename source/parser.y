@@ -69,18 +69,23 @@ Programa     : DeclPrograma {
                         TREE_NODE_NOTYPE,
                         $1,
                         NULL,
-                        NULL
+                        NULL,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              ;
 
 DeclPrograma : PRINCIPAL Bloco {
+                    printf("opakk\n");
                     $$ = tree_node_create(
                         TREE_NODE_DECL_PROGRAMA,
                         TREE_NODE_NOTYPE,
                         $2,
                         NULL,
-                        NULL
+                        NULL,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              ;
@@ -91,7 +96,9 @@ Bloco        : '{' ListaComando '}' {
                         TREE_NODE_NOTYPE,
                         $2,
                         NULL,
-                        NULL
+                        NULL,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              | VarSection '{' ListaComando '}' {
@@ -100,7 +107,9 @@ Bloco        : '{' ListaComando '}' {
                         TREE_NODE_NOTYPE,
                         $3,
                         $1,
-                        NULL
+                        NULL,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              ;
@@ -111,7 +120,9 @@ VarSection   : '{' ListaDeclVar '}' {
                         TREE_NODE_NOTYPE,
                         $2,
                         NULL,
-                        NULL
+                        NULL,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              ;
@@ -126,7 +137,9 @@ ListaDeclVar : IDENTIFICADOR DeclVar ':' Tipo ';' ListaDeclVar {
                         type,
                         $2,
                         NULL,
-                        $1
+                        $1,
+                        @1.first_line,
+                        @1.first_column
                     );
 
                     $$ = tree_node_create(
@@ -134,7 +147,9 @@ ListaDeclVar : IDENTIFICADOR DeclVar ':' Tipo ';' ListaDeclVar {
                         TREE_NODE_NOTYPE,
                         node,
                         $6,
-                        NULL
+                        NULL,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              | IDENTIFICADOR DeclVar ':' Tipo ';' {
@@ -147,7 +162,9 @@ ListaDeclVar : IDENTIFICADOR DeclVar ':' Tipo ';' ListaDeclVar {
                         type,
                         $2,
                         NULL,
-                        $1
+                        $1,
+                        @1.first_line,
+                        @1.first_column
                     );
 
                     $$ = tree_node_create(
@@ -155,7 +172,9 @@ ListaDeclVar : IDENTIFICADOR DeclVar ':' Tipo ';' ListaDeclVar {
                         TREE_NODE_NOTYPE,
                         node,
                         NULL,
-                        NULL
+                        NULL,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              ;
@@ -169,7 +188,9 @@ DeclVar      : %empty {
                         TREE_NODE_NOTYPE,
                         $3,
                         NULL,
-                        $2
+                        $2,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              ;
@@ -180,7 +201,9 @@ Tipo         : INT {
                         TREE_NODE_INTEGER,
                         NULL,
                         NULL,
-                        NULL
+                        NULL,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              | CAR {
@@ -189,7 +212,9 @@ Tipo         : INT {
                         TREE_NODE_CHARACTER,
                         NULL,
                         NULL,
-                        NULL
+                        NULL,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              ;
@@ -200,7 +225,9 @@ ListaComando : Comando {
                         TREE_NODE_NOTYPE,
                         $1,
                         NULL,
-                        NULL
+                        NULL,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              | Comando ListaComando {
@@ -209,7 +236,9 @@ ListaComando : Comando {
                         TREE_NODE_NOTYPE,
                         $1,
                         $2,
-                        NULL
+                        NULL,
+                        @1.first_line,
+                        @1.first_column
                     );
              }
              ;
@@ -224,7 +253,9 @@ Comando      : ';' {
                         TREE_NODE_NOTYPE,
                         NULL,
                         NULL,
-                        $2
+                        $2,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              | ESCREVA Expr ';' {
@@ -233,7 +264,9 @@ Comando      : ';' {
                         TREE_NODE_NOTYPE,
                         $2,
                         NULL,
-                        NULL
+                        NULL,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              | ESCREVA CADEIACARACTERES ';' {
@@ -242,7 +275,9 @@ Comando      : ';' {
                         TREE_NODE_STRING,
                         NULL,
                         NULL,
-                        $2
+                        $2,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              | NOVALINHA ';' {
@@ -251,7 +286,9 @@ Comando      : ';' {
                         TREE_NODE_NOTYPE,
                         NULL,
                         NULL,
-                        NULL
+                        NULL,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              | SE '(' Expr ')' ENTAO Comando FIMSE {
@@ -260,7 +297,9 @@ Comando      : ';' {
                         TREE_NODE_NOTYPE,
                         $3,
                         $6,
-                        NULL
+                        NULL,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              | SE '(' Expr ')' ENTAO Comando SENAO Comando FIMSE {
@@ -269,7 +308,9 @@ Comando      : ';' {
                         TREE_NODE_NOTYPE,
                         $6,
                         $8,
-                        NULL
+                        NULL,
+                        @1.first_line,
+                        @1.first_column
                     );
 
                     $$ = tree_node_create(
@@ -277,7 +318,9 @@ Comando      : ';' {
                         TREE_NODE_NOTYPE,
                         $3,
                         node,
-                        NULL
+                        NULL,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              | ENQUANTO '(' Expr ')' Comando {
@@ -286,7 +329,9 @@ Comando      : ';' {
                         TREE_NODE_NOTYPE,
                         $3,
                         $5,
-                        NULL
+                        NULL,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              | Bloco {
@@ -303,7 +348,9 @@ Expr         : OrExpr {
                         TREE_NODE_NOTYPE,
                         $3,
                         NULL,
-                        $1
+                        $1,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              ;
@@ -314,7 +361,9 @@ OrExpr       : OrExpr OU AndExpr {
                         TREE_NODE_NOTYPE,
                         $1,
                         $3,
-                        NULL
+                        NULL,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              | AndExpr {
@@ -328,7 +377,9 @@ AndExpr      : AndExpr E EqExpr {
                         TREE_NODE_NOTYPE,
                         $1,
                         $3,
-                        NULL
+                        NULL,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              | EqExpr {
@@ -342,7 +393,9 @@ EqExpr       : EqExpr IGUAL DesigExpr {
                         TREE_NODE_NOTYPE,
                         $1,
                         $3,
-                        NULL
+                        NULL,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              | EqExpr DIFERENTE DesigExpr {
@@ -351,7 +404,9 @@ EqExpr       : EqExpr IGUAL DesigExpr {
                         TREE_NODE_NOTYPE,
                         $1,
                         $3,
-                        NULL
+                        NULL,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              | DesigExpr {
@@ -365,7 +420,9 @@ DesigExpr    : DesigExpr '<' AddExpr {
                         TREE_NODE_NOTYPE,
                         $1,
                         $3,
-                        NULL
+                        NULL,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              | DesigExpr '>' AddExpr {
@@ -374,7 +431,9 @@ DesigExpr    : DesigExpr '<' AddExpr {
                         TREE_NODE_NOTYPE,
                         $1,
                         $3,
-                        NULL
+                        NULL,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              | DesigExpr MENORIGUAL AddExpr {
@@ -383,7 +442,9 @@ DesigExpr    : DesigExpr '<' AddExpr {
                         TREE_NODE_NOTYPE,
                         $1,
                         $3,
-                        NULL
+                        NULL,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              | DesigExpr MAIORIGUAL AddExpr {
@@ -392,7 +453,9 @@ DesigExpr    : DesigExpr '<' AddExpr {
                         TREE_NODE_NOTYPE,
                         $1,
                         $3,
-                        NULL
+                        NULL,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              | AddExpr {
@@ -406,7 +469,9 @@ AddExpr      : AddExpr '+' MulExpr {
                         TREE_NODE_NOTYPE,
                         $1,
                         $3,
-                        NULL
+                        NULL,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              | AddExpr '-' MulExpr {
@@ -415,7 +480,9 @@ AddExpr      : AddExpr '+' MulExpr {
                         TREE_NODE_NOTYPE,
                         $1,
                         $3,
-                        NULL
+                        NULL,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              | MulExpr {
@@ -429,7 +496,9 @@ MulExpr      : MulExpr '*' UnExpr {
                         TREE_NODE_NOTYPE,
                         $1,
                         $3,
-                        NULL
+                        NULL,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              | MulExpr '/' UnExpr {
@@ -438,7 +507,9 @@ MulExpr      : MulExpr '*' UnExpr {
                         TREE_NODE_NOTYPE,
                         $1,
                         $3,
-                        NULL
+                        NULL,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              | UnExpr {
@@ -452,7 +523,9 @@ UnExpr       : '-' PrimExpr {
                         TREE_NODE_NOTYPE,
                         $2,
                         NULL,
-                        NULL
+                        NULL,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              | '!' PrimExpr {
@@ -461,7 +534,9 @@ UnExpr       : '-' PrimExpr {
                         TREE_NODE_NOTYPE,
                         $2,
                         NULL,
-                        NULL
+                        NULL,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              | PrimExpr {
@@ -475,7 +550,9 @@ PrimExpr     : IDENTIFICADOR {
                         TREE_NODE_NOTYPE,
                         NULL,
                         NULL,
-                        $1
+                        $1,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              | CARCONST {
@@ -484,7 +561,9 @@ PrimExpr     : IDENTIFICADOR {
                         TREE_NODE_NOTYPE,
                         NULL,
                         NULL,
-                        $1
+                        $1,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              | INTCONST {
@@ -493,7 +572,9 @@ PrimExpr     : IDENTIFICADOR {
                         TREE_NODE_NOTYPE,
                         NULL,
                         NULL,
-                        $1
+                        $1,
+                        @1.first_line,
+                        @1.first_column
                     );
                 }
              | '(' Expr ')' {
