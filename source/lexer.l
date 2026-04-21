@@ -114,7 +114,7 @@ ID [[:alpha:]_][[:alnum:]_]*
 "fimse"     {return FIMSE;}
 "enquanto"  {return ENQUANTO;}
 
-{DIGIT}+ {
+[+-]?{DIGIT}+ {
     yylval.lexeme = copy_substring(yytext, false, 0, strlen(yytext) - 1);
     return INTCONST;
 }
@@ -146,11 +146,6 @@ ID [[:alpha:]_][[:alnum:]_]*
 char* copy_substring(const char* string, bool escape, int left, int right) {
     int lenght = strlen(string);
     char* copy = (char*)allocate_memory(lenght + 1);
-
-    if (copy == NULL) {
-        analysis_error = false;
-        yyerror("Memória indisponível!!!");
-    }
 
     for (int i = 0; i <= lenght; i++) {
         copy[i] = '\0';
