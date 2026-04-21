@@ -21,6 +21,7 @@ struct _TreeNode {
     int column;
 };
 
+// TODO: remove this
 char* opa(TreeNodeKind kind) {
     static char* op;
 
@@ -177,7 +178,7 @@ TreeNode* tree_node_create(
         .column = column,
     };
 
-    printf("(%d, %d): %s\n", line, column, opa(kind));
+    // printf("(%d, %d): %s\n", line, column, opa(kind));
 
     return node;
 }

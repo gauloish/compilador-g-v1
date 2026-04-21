@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <inttypes.h>
 
 #include "../include/memory.h"
 #include "../include/symbol_table.h"
@@ -41,7 +42,7 @@ struct _SymbolScope {
  * @param type Symbol type (integer or character)
  * @return SymbolEntry* New symbol entry
  */
-SymbolEntry* symbol_entry_create(char* name, SymbolDataType type) {
+SymbolEntry* symbol_entry_create(const char* name, SymbolDataType type) {
     SymbolEntry* symbol = (SymbolEntry*) allocate_memory(sizeof(SymbolEntry));
 
     *symbol = (SymbolEntry){
@@ -102,19 +103,54 @@ void symbol_table_delete(SymbolTable* symbol_table) {
     free_memory(symbol_table);
 }
 
+/**
+ * @brief Compute hash of a string via FNV-1a algorithm
+ * 
+ * @param string String to be hashed
+ * @return int Hash of the string
+ */
+int compute_hash(const char* string) {
+    uint64_t hash = 1469598103934665603ULL;
+
+    while (*string) {
+        hash ^= (unsigned char)(*string++);
+        hash *= 1099511628211ULL;
+    }
+
+    return hash % TABLE_SIZE;
+}
+
+/**
+ * @brief Add a symbol in symbol table
+ * 
+ * @param symbol_table Symbol table where symbol will be added
+ * @param name Name of the symbol
+ * @param type Data type of the symbol
+ */
+void symbol_table_add_symbol(SymbolTable* symbol_table, const char* name, SymbolDataType type) {
+    if (symbol_table == NULL) {
+        return;
+    }
+
+    SymbolEntry* symbol = symbol_entry_create(name, type);
+    int i = compute_hash(name);
+
+    symbol->next = symbol_table->table[i];
+    symbol_table->table[i] = symbol;
+}
+
 // -------------------- Symbol Scope -------------------- //
 
 /**
  * @brief Create a new symbol scope
  * 
- * @param symbol_table Symble table for initialize scope stack
  * @return SymbolScope* New symbol scope
  */
-SymbolScope* symbol_scope_create(SymbolTable* symbol_table) {
+SymbolScope* symbol_scope_create(void) {
     SymbolScope* symbol_scope = (SymbolScope*) allocate_memory(sizeof(SymbolScope));
 
     *symbol_scope = (SymbolScope){
-        .symbol_table = symbol_table,
+        .symbol_table = NULL,
         .next = NULL,
     };
 
