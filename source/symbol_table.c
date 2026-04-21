@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <strings.h>
 #include <inttypes.h>
 
 #include "../include/memory.h"
@@ -137,6 +138,63 @@ void symbol_table_add_symbol(SymbolTable* symbol_table, const char* name, Symbol
 
     symbol->next = symbol_table->table[i];
     symbol_table->table[i] = symbol;
+}
+
+/**
+ * @brief Check if a name is present in the symbol table
+ * 
+ * @param symbol_table Symbol table
+ * @param name Name to be checked
+ * @return true If name is present in the symbol table
+ * @return false If not
+ */
+bool symbol_table_check_symbol(SymbolTable* symbol_table, const char* name) {
+    if (symbol_table == NULL || name == NULL) {
+        return false;
+    }
+
+    int i = compute_hash(name);
+    SymbolEntry* symbol = symbol_table->table[i];
+
+    while (symbol != NULL) {
+        if (strcmp(name, symbol->name) == 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
+ * @brief Get a list with all symbols in the table
+ * 
+ * @param symbol_table Symbol table
+ * @return SymbolEntry* A list with all symbols in the table
+ */
+SymbolEntry* symbol_table_get_symbols(SymbolTable* symbol_table) {
+    if (symbol_table == NULL) {
+        return NULL;
+    }
+
+    SymbolEntry* symbols = NULL;
+
+    for (int i = 0; i < TABLE_SIZE; i++) {
+        SymbolEntry* symbol = symbol_table->table[i];
+
+        while (symbol != NULL) {
+            SymbolEntry* new_symbol = symbol_entry_create(symbol->name, symbol->type);
+
+            if (symbols == NULL) {
+                symbols = new_symbol;
+            }
+            else {
+                new_symbol->next = symbol;
+                symbol = new_symbol;
+            }
+        }
+    }
+
+    return symbols;
 }
 
 // -------------------- Symbol Scope -------------------- //
