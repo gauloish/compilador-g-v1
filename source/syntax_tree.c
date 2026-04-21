@@ -8,7 +8,6 @@ extern void yyerror(const char*);
 extern int yylineno;
 extern bool analysis_error;
 
-
 /**
  * @brief Abstract Syntax Tree node struct
  * 
@@ -32,7 +31,7 @@ struct _TreeNode {
  * @param lexeme Lexeme for ID or literal data
  * @return TreeNode* A node for build Abstracted Syntax Tree
  */
-TreeNode* tree_create_node(
+TreeNode* tree_node_create(
     TreeNodeKind kind,
     TreeNodeDataType type,
     TreeNode* left,
@@ -64,7 +63,7 @@ TreeNode* tree_create_node(
  * @param node Tree node
  * @return Node kind
  */
-TreeNodeKind tree_get_node_kind(TreeNode* node) {
+TreeNodeKind tree_node_get_kind(TreeNode* node) {
     if (node == NULL) {
         return TREE_NODE_NOKIND;
     }
@@ -78,7 +77,7 @@ TreeNodeKind tree_get_node_kind(TreeNode* node) {
  * @param node Tree node
  * @return Node data type
  */
-TreeNodeDataType tree_get_node_data_type(TreeNode* node) {
+TreeNodeDataType tree_node_get_data_type(TreeNode* node) {
     if (node == NULL) {
         return TREE_NODE_NOTYPE;
     }
@@ -92,7 +91,7 @@ TreeNodeDataType tree_get_node_data_type(TreeNode* node) {
  * @param node Tree node
  * @return Node left
  */
-TreeNode* tree_get_node_left(TreeNode* node) {
+TreeNode* tree_node_get_left(TreeNode* node) {
     if (node == NULL) {
         return NULL;
     }
@@ -106,7 +105,7 @@ TreeNode* tree_get_node_left(TreeNode* node) {
  * @param node Tree node
  * @return Node right
  */
-TreeNode* tree_get_node_right(TreeNode* node) {
+TreeNode* tree_node_get_right(TreeNode* node) {
     if (node == NULL) {
         return NULL;
     }
@@ -120,7 +119,7 @@ TreeNode* tree_get_node_right(TreeNode* node) {
  * @param node Tree node
  * @return Node lexeme
  */
-char* tree_get_node_lexeme(TreeNode* node) {
+char* tree_node_get_lexeme(TreeNode* node) {
     if (node == NULL) {
         return NULL;
     }
@@ -133,7 +132,7 @@ char* tree_get_node_lexeme(TreeNode* node) {
  *
  * @param node Tree node
  */
-void tree_set_node_type(TreeNode* node, TreeNodeDataType type) {
+void tree_node_set_type(TreeNode* node, TreeNodeDataType type) {
     if (node == NULL) {
         return;
     }

@@ -3,15 +3,16 @@
 
 typedef enum _TreeNodeKind TreeNodeKind;
 typedef enum _TreeNodeDataType TreeNodeDataType;
+
 typedef struct _TreeNode TreeNode;
 
-TreeNode* tree_create_node(TreeNodeKind, TreeNodeDataType, TreeNode*, TreeNode*, char*);
-TreeNodeKind tree_get_node_kind(TreeNode*);
-TreeNodeDataType tree_get_node_data_type(TreeNode*);
-TreeNode* tree_get_node_left(TreeNode*);
-TreeNode* tree_get_node_right(TreeNode*);
-char* tree_get_node_lexeme(TreeNode*);
-void tree_set_node_type(TreeNode*, TreeNodeDataType);
+TreeNode* tree_node_create(TreeNodeKind, TreeNodeDataType, TreeNode*, TreeNode*, char*);
+TreeNodeKind tree_node_get_kind(TreeNode*);
+TreeNodeDataType tree_node_get_data_type(TreeNode*);
+TreeNode* tree_node_get_left(TreeNode*);
+TreeNode* tree_node_get_right(TreeNode*);
+char* tree_node_get_lexeme(TreeNode*);
+void tree_node_set_type(TreeNode*, TreeNodeDataType);
 
 /**
  * @brief Operation kind of node in Abstract Syntax Tree
