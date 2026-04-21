@@ -230,3 +230,96 @@ void symbol_scope_delete(SymbolScope* symbol_scope) {
         symbol_scope = next;
     }
 }
+
+/**
+ * @brief Push a new scope in symbol scopes
+ * 
+ * @param symbol_scope Symbol scope stack to be modified
+ * @return SymbolScope* New symbol scope stack
+ */
+SymbolScope* symbol_scope_push_scope(SymbolScope* symbol_scope) {
+    SymbolTable* symbol_table = symbol_table_create();
+    SymbolScope* new_symbol_scope = symbol_scope_create();
+
+    new_symbol_scope->symbol_table = symbol_table;
+    new_symbol_scope->next = symbol_scope;
+
+    return new_symbol_scope;
+}
+
+/**
+ * @brief Pop the top scope
+ * 
+ * @param symbol_scope Symbol scope stack
+ * @return SymbolScope* New symbol scope stack
+ */
+SymbolScope* symbol_scope_pop_scope(SymbolScope* symbol_scope) {
+    if (symbol_scope == NULL) {
+        return NULL;
+    }
+
+    symbol_table_delete(symbol_scope->symbol_table);
+    SymbolScope* next = symbol_scope->next;
+    free_memory(symbol_scope);
+
+    return next;
+}
+
+/**
+ * @brief Add symbol in the current scope
+ * 
+ * @param symbol_scope Scymbol scope stack
+ * @param name Name of the symbol
+ * @param type Type of the symbol
+ */
+void symbol_scope_add_symbol(SymbolScope* symbol_scope, const char* name, SymbolDataType type) {
+    if (symbol_scope == NULL) {
+        return;
+    }
+
+    symbol_table_add_symbol(symbol_scope->symbol_table, name, type);
+}
+
+/**
+ * @brief Check if the name is in the current/all scopes
+ * 
+ * @param symbol_scope Scymbol scope stack
+ * @param name Name of the symbol
+ * @param current_scope If checking is in current or all scopes
+ * @return true If name is in the respectivelly scopes
+ * @return false If not
+ */
+bool symbol_scope_check_symbol(SymbolScope* symbol_scope, const char* name, bool current_scope) {
+    if (symbol_scope == NULL) {
+        return false;
+    }
+
+    if (current_scope) {
+        if (symbol_table_check_symbol(symbol_scope->symbol_table, name)) {
+            return true;
+        }
+    }
+    else {
+        while (symbol_scope != NULL) {
+            if (symbol_table_check_symbol(symbol_scope->symbol_table, name)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+/**
+ * @brief Get all symbols of the top of the symbol scope stack
+ * 
+ * @param symbol_scope Symbol scope stack
+ * @return SymbolEntry* The symbol list of the current symbol scope
+ */
+SymbolEntry* symbol_scope_get_symbols(SymbolScope* symbol_scope) {
+    if (symbol_scope == NULL) {
+        return NULL;
+    }
+
+    return symbol_table_get_symbols(symbol_scope->symbol_table);
+}
