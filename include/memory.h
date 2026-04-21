@@ -4,7 +4,7 @@
 #ifndef __MEMORY_H__
 #define __MEMORY_H__
 
-bool begin_memory(void);
+void begin_memory(void);
 void end_memory(void);
 
 void* allocate_memory(const size_t);
