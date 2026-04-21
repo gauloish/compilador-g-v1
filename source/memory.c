@@ -3,6 +3,9 @@
 
 #include "../include/memory.h"
 
+extern void yyerror(char*);
+extern bool analysis_error;
+
 typedef struct _MemoryNode MemoryNode;
 
 /**
@@ -17,24 +20,29 @@ struct _MemoryNode {
 MemoryNode* node = NULL;
 
 /**
+ * @brief End the program due to insufficient memory
+ * 
+ */
+void out_of_memory(void) {
+    analysis_error = false;
+    yyerror("Memória Insuficiente!!!");
+}
+
+/**
  * @brief Initialize the global memory list
  * 
- * @return true If the initialization is successful
- * @return false If not
  */
-bool begin_memory(void) {
+void begin_memory(void) {
     node = (MemoryNode*) malloc(sizeof(MemoryNode));
 
     if (node == NULL) {
-        return false;
+        out_of_memory();
     }
 
     *node = (MemoryNode){
         .memory = NULL,
         .next = NULL,
     };
-
-    return true;
 }
 
 /**
@@ -64,14 +72,14 @@ void* allocate_memory(const size_t size) {
     MemoryNode* next = (MemoryNode*) malloc(sizeof(MemoryNode));
 
     if (next == NULL) {
-        return NULL;
+        out_of_memory();
     }
 
     void* memory = malloc(size);
 
     if (memory == NULL) {
         free(next);
-        return NULL;
+        out_of_memory();
     }
 
     *next = (MemoryNode){
