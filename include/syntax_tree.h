@@ -5,7 +5,7 @@ typedef enum _TreeNodeKind TreeNodeKind;
 typedef enum _TreeNodeDataType TreeNodeDataType;
 typedef struct _TreeNode TreeNode;
 
-TreeNode* tree_node_create(TreeNodeKind, TreeNodeDataType, TreeNode*, TreeNode*, char*, int, int);
+TreeNode* tree_node_create(TreeNodeKind, TreeNodeDataType, TreeNode*, TreeNode*, const char*, int, int);
 TreeNodeKind tree_node_get_kind(TreeNode*);
 TreeNodeDataType tree_node_get_data_type(TreeNode*);
 TreeNode* tree_node_get_left(TreeNode*);

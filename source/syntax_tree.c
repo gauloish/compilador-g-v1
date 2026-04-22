@@ -16,7 +16,7 @@ struct _TreeNode {
     TreeNodeDataType type;
     TreeNode* left;
     TreeNode* right;
-    char* lexeme;
+    const char* lexeme;
     int line;
     int column;
 };
@@ -162,7 +162,7 @@ TreeNode* tree_node_create(
     TreeNodeDataType type,
     TreeNode* left,
     TreeNode* right,
-    char* lexeme,
+    const char* lexeme,
     int line,
     int column
 ) {
