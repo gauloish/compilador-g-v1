@@ -166,6 +166,30 @@ bool symbol_table_check_symbol(SymbolTable* symbol_table, const char* name) {
 }
 
 /**
+ * @brief Get the data type of a symbol in symbol table
+ * 
+ * @param symbol_table Symbol table
+ * @param name Name of the symbol
+ * @return SymbolDataType Symbol data type
+ */
+SymbolDataType symbol_table_get_data_type(SymbolTable* symbol_table, const char* name) {
+    if (symbol_table == NULL || name == NULL) {
+        return SYMBOL_NOTYPE;
+    }
+
+    int i = compute_hash(name);
+    SymbolEntry* symbol = symbol_table->table[i];
+
+    while (symbol != NULL) {
+        if (strcmp(name, symbol->name) == 0) {
+            return symbol->type;
+        }
+    }
+
+    return SYMBOL_NOTYPE;
+}
+
+/**
  * @brief Get a list with all symbols in the table
  * 
  * @param symbol_table Symbol table
@@ -304,10 +328,43 @@ bool symbol_scope_check_symbol(SymbolScope* symbol_scope, const char* name, bool
             if (symbol_table_check_symbol(symbol_scope->symbol_table, name)) {
                 return true;
             }
+
+            symbol_scope = symbol_scope->next;
         }
     }
 
     return false;
+}
+
+/**
+ * @brief Get the data type of an symbol in some symbol table of symbol scope stack
+ * 
+ * @param symbol_scope Symbol scope stack
+ * @param name Name of the symbol
+ * @param current_scope If search is in current or all scopes
+ * @return SymbolDataType The data type of symbol
+ */
+SymbolDataType symbol_scope_get_data_type(SymbolScope* symbol_scope, const char* name, bool current_scope) {
+    if (symbol_scope == NULL) {
+        return SYMBOL_NOTYPE;
+    }
+
+    if (current_scope) {
+        return symbol_table_get_data_type(symbol_scope->symbol_table, name);
+    }
+    else {
+        while (symbol_scope != NULL) {
+            SymbolDataType type = symbol_table_get_data_type(symbol_scope->symbol_table, name);
+
+            if (type != SYMBOL_NOTYPE) {
+                return type;
+            }
+
+            symbol_scope = symbol_scope->next;
+        }
+    }
+
+    return SYMBOL_NOTYPE;
 }
 
 /**
