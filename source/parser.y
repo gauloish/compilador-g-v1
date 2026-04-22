@@ -6,6 +6,7 @@
 #include "../include/memory.h"
 #include "../include/syntax_tree.h"
 #include "../include/semantic_analysis.h"
+#include "../include/code_generation.h"
 
 extern int yylex();
 extern char* yytext;
@@ -76,6 +77,7 @@ Programa: DeclPrograma {
         );
 
         semantic_analysis(tree);
+        generate_code(tree);
     };
 
 DeclPrograma: PRINCIPAL Bloco {
