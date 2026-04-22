@@ -2,7 +2,7 @@ COMPILER = gcc
 NAME = g-v1
 OBJECTS_DIR = objects
 INCLUDE = -I"include/"
-FILES = memory syntax_tree symbol_table lexer parser main
+FILES = memory syntax_tree symbol_table semantic_analysis lexer parser main
 
 SOURCES = $(FILES:%=source/%.c)
 OBJECTS = $(FILES:%=objects/%.o)
