@@ -1,18 +1,18 @@
 #include <stdlib.h>
-#include <strings.h>
+#include <string.h>
 #include <inttypes.h>
 
 #include "../include/memory.h"
 #include "../include/symbol_table.h"
 
-const int TABLE_SIZE = 257;
+#define TABLE_SIZE 257
 
 /**
  * @brief Symbol entry struct
  *
  */
 struct _SymbolEntry {
-    char* name;
+    const char* name;
     SymbolDataType type;
     SymbolEntry* next;
 };
