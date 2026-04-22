@@ -114,7 +114,7 @@ ID [[:alpha:]_][[:alnum:]_]*
 "fimse"     {return FIMSE;}
 "enquanto"  {return ENQUANTO;}
 
-[+-]?{DIGIT}+ {
+{DIGIT}+ {
     yylval.lexeme = copy_substring(yytext, false, 0, strlen(yytext) - 1);
     return INTCONST;
 }
