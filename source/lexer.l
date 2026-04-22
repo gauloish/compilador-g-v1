@@ -154,8 +154,8 @@ char* copy_substring(const char* string, bool escape, int left, int right) {
     for (int i = 0, j = left; j <= right && i <= lenght; i++, j++) {
         if (yytext[j] == '\\' && j + 1 <= right) {
             switch (yytext[j + 1]) {
-                case '\\':
-                    copy[i] = '\\';
+                case '0':
+                    copy[i] = '\0';
                     break;
                 case 'n':
                     copy[i] = '\n';
@@ -163,8 +163,20 @@ char* copy_substring(const char* string, bool escape, int left, int right) {
                 case 't':
                     copy[i] = '\t';
                     break;
+                case 'r':
+                    copy[i] = '\r';
+                    break;
+                case 'b':
+                    copy[i] = '\b';
+                    break;
+                case '\\':
+                    copy[i] = '\\';
+                    break;
                 case '\"':
                     copy[i] = '\"';
+                    break;
+                case '\'':
+                    copy[i] = '\'';
                     break;
                 default:
                     copy[i] = string[j];
