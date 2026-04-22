@@ -126,8 +126,6 @@ VarSection: '{' ListaDeclVar '}' {
     };
 
 ListaDeclVar: IDENTIFICADOR DeclVar ':' Tipo ';' ListaDeclVar {
-        // TODO: Propagate data type in identifier list in 
-        // preprocess semantic analysis
         TreeNodeDataType type = tree_node_get_data_type($4);
 
         TreeNode* node = tree_node_create(
@@ -151,8 +149,6 @@ ListaDeclVar: IDENTIFICADOR DeclVar ':' Tipo ';' ListaDeclVar {
         );
     }
     | IDENTIFICADOR DeclVar ':' Tipo ';' {
-        // TODO: Propagate data type in identifier list in 
-        // preprocess semantic analysis
         TreeNodeDataType type = tree_node_get_data_type($4);
 
         TreeNode* node = tree_node_create(
