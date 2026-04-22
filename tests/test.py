@@ -2,34 +2,38 @@ import subprocess
 
 tests = {
     "correct": [
-        "correct/fatorial.g",
-        "correct/NotaEmConceito.g",
-        "correct/PA.g",
-        "correct/SeqOrdenada.g",
-        "correct/Soma.g",
+        "fatorial.g",
+        "NotaEmConceito.g",
+        "PA.g",
+        "SeqOrdenada.g",
+        "Soma.g",
     ],
     "lexical_error": [
-        "lexical_error/NotaEmConceito-CadeiaCaracteresOcupaMaisDeUmalinhaLin10-11.g",
-        "lexical_error/NotaEmConceito-CaractereInvalidoLinha16.g",
-        "lexical_error/NotaEmConceito-ComentarioNaoTerminaLin1.g",
-        "lexical_error/NotaEmConceito-MaisDeUmCaractereNaConstCarLin55.g",
+        "NotaEmConceito-CadeiaCaracteresOcupaMaisDeUmalinhaLin10-11.g",
+        "NotaEmConceito-CaractereInvalidoLinha16.g",
+        "NotaEmConceito-ComentarioNaoTerminaLin1.g",
+        "NotaEmConceito-MaisDeUmCaractereNaConstCarLin55.g",
     ],
     "syntatic_error": [
-        "syntatic_error/NotaEmConceito-AbreChavesEsperadoLin18.g",
-        "syntatic_error/NotaEmConceito-DeclaracaoNaoEnvolvidaEmChavesLin15-17.g",
-        "syntatic_error/NotaEmConceito-FechaChavesEsperadoLin49.g",
-        "syntatic_error/NotaEmConceito-FimseFaltandoLIn60.g",
-        "syntatic_error/NotaEmConceitoPonto-e-virgulaFaltandoLin20.g",
+        "NotaEmConceito-AbreChavesEsperadoLin18.g",
+        "NotaEmConceito-DeclaracaoNaoEnvolvidaEmChavesLin15-17.g",
+        "NotaEmConceito-FechaChavesEsperadoLin49.g",
+        "NotaEmConceito-FimseFaltandoLIn60.g",
+        "NotaEmConceitoPonto-e-virgulaFaltandoLin20.g",
     ],
     "semantic_error": [
-        "semantic_error/NotaEmConceito-AbreChavesEsperadoLin18.g",
-        "semantic_error/NotaEmConceito-DeclaracaoNaoEnvolvidaEmChavesLin15-17.g",
-        "semantic_error/NotaEmConceito-FechaChavesEsperadoLin49.g",
-        "semantic_error/NotaEmConceito-FimseFaltandoLIn60.g",
-        "semantic_error/NotaEmConceitoPonto-e-virgulaFaltandoLin20.g",
+        "fatorial-VariavelNaoDeclaradaLin19.g",
+        "NotaEmConceito-Sub-expressoesDeTiposIncompativeisLin26.g",
+        "NotaEmConceito-VariavelNaoDeclaradaNoEsopoAtual.g",
+        "fatorial-VariavelRedeclaradaNoMesmoEscopoLin9.g",
+        "NotaEmConceito-VariavelDeTipoIncopativelComExpressaoLin19.g",
     ]
 }
 
-for i in ["correct", "lexical_error", "syntatic_error"]:
+for i in ["correct", "lexical_error", "syntatic_error", "semantic_error"]:
+    print(f"\\\\ ======================================== {i} ======================================== \\\\ \n")
+
     for test in tests[i]:
-        subprocess.run(["../g-v1", test])
+        print(f"Arquivo \"{i}/{test}\":")
+        subprocess.run(["../g-v1", f"{i}/{test}"])
+        print()
