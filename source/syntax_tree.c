@@ -21,130 +21,6 @@ struct _TreeNode {
     int column;
 };
 
-// TODO: remove this
-char* opa(TreeNodeKind kind) {
-    static char* op;
-
-    switch (kind) {
-        case TREE_NODE_PROGRAMA:
-            op = "PROGRAMA";
-            break;
-        case TREE_NODE_DECL_PROGRAMA:
-            op = "DECL_PROGRAMA";
-            break;
-        case TREE_NODE_BLOCO:
-            op = "BLOCO";
-            break;
-        case TREE_NODE_VAR_SECTION:
-            op = "VAR_SECTION";
-            break;
-        case TREE_NODE_LISTA_DECL_VAR:
-            op = "LISTA_DECL_VAR";
-            break;
-        case TREE_NODE_DECL_VAR:
-            op = "DECL_VAR";
-            break;
-        case TREE_NODE_INT:
-            op = "INT";
-            break;
-        case TREE_NODE_CAR:
-            op = "CAR";
-            break;
-        case TREE_NODE_LISTA_COMANDO:
-            op = "LISTA_COMANDO";
-            break;
-        case TREE_NODE_COMANDO:
-            op = "COMANDO";
-            break;
-        case TREE_NODE_LEIA:
-            op = "LEIA";
-            break;
-        case TREE_NODE_ESCREVA_EXPRESSAO:
-            op = "ESCREVA_EXPRESSAO";
-            break;
-        case TREE_NODE_ESCREVA_CADEIACARACTERES:
-            op = "ESCREVA_CADEIACARACTERES";
-            break;
-        case TREE_NODE_NOVALINHA:
-            op = "NOVALINHA";
-            break;
-        case TREE_NODE_SE_ENTAO:
-            op = "SE_ENTAO";
-            break;
-        case TREE_NODE_SE_ENTAO_SENAO:
-            op = "SE_ENTAO_SENAO";
-            break;
-        case TREE_NODE_ENTAO_SENAO:
-            op = "ENTAO_SENAO";
-            break;
-        case TREE_NODE_ENQUANTO:
-            op = "ENQUANTO";
-            break;
-        case TREE_NODE_ASSIGN_EXPR:
-            op = "ASSIGN_EXPR";
-            break;
-        case TREE_NODE_OR_EXPR:
-            op = "OR_EXPR";
-            break;
-        case TREE_NODE_AND_EXPR:
-            op = "AND_EXPR";
-            break;
-        case TREE_NODE_EQ_EXPR:
-            op = "EQ_EXPR";
-            break;
-        case TREE_NODE_NEQ_EXPR:
-            op = "NEQ_EXPR";
-            break;
-        case TREE_NODE_LE_EXPR:
-            op = "LE_EXPR";
-            break;
-        case TREE_NODE_GE_EXPR:
-            op = "GE_EXPR";
-            break;
-        case TREE_NODE_LEQ_EXPR:
-            op = "LEQ_EXPR";
-            break;
-        case TREE_NODE_GEQ_EXPR:
-            op = "GEQ_EXPR";
-            break;
-        case TREE_NODE_ADD_EXPR:
-            op = "ADD_EXPR";
-            break;
-        case TREE_NODE_SUB_EXPR:
-            op = "SUB_EXPR";
-            break;
-        case TREE_NODE_MUL_EXPR:
-            op = "MUL_EXPR";
-            break;
-        case TREE_NODE_DIV_EXPR:
-            op = "DIV_EXPR";
-            break;
-        case TREE_NODE_MINUS_EXPR:
-            op = "MINUS_EXPR";
-            break;
-        case TREE_NODE_NEG_EXPR:
-            op = "NEG_EXPR";
-            break;
-        case TREE_NODE_IDENTIFICADOR:
-            op = "IDENTIFICADOR";
-            break;
-        case TREE_NODE_CARCONST:
-            op = "CARCONST";
-            break;
-        case TREE_NODE_INTCONST:
-            op = "INTCONST";
-            break;
-        case TREE_NODE_NOKIND:
-            op = "NOKIND";
-            break;
-        default:
-            op = "default";
-            break;
-    }
-
-    return op;
-}
-
 /**
  * @brief Create a tree node object for build Abstract Syntax Tree
  * 
@@ -273,7 +149,7 @@ int tree_node_get_column(TreeNode* node) {
  * @param node Tree node
  * @return Node lexeme
  */
-char* tree_node_get_lexeme(TreeNode* node) {
+const char* tree_node_get_lexeme(TreeNode* node) {
     if (node == NULL) {
         return NULL;
     }
