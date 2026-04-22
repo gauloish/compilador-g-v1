@@ -33,67 +33,82 @@ void report_semantic_error(const char* message, TreeNode* node) {
  * @param scopes Symbol scope stack to help in the analysis
  */
 void traverse_tree(TreeNode* node, SymbolScope* scopes) {
-    static char* message[MESSAGE_SIZE];
+    static char message[MESSAGE_SIZE];
 
     if (node == NULL) {
         return;
     }
 
-    TreeNodeKind kind = tree_node_get_data_type(node);
+    TreeNodeKind kind = tree_node_get_kind(node);
 
     switch (kind) {
         case TREE_NODE_PROGRAMA:
-            traverse_tree(tree_node_get_left(node), scopes);
+            {
+                traverse_tree(tree_node_get_left(node), scopes);
+            }
             break;
 
         case TREE_NODE_DECL_PROGRAMA:
-            traverse_tree(tree_node_get_left(node), scopes);
+            {
+                traverse_tree(tree_node_get_left(node), scopes);
+            }
             break;
 
         case TREE_NODE_BLOCO:
-            scopes = symbol_scope_push_scope(scopes);
-            traverse_tree(tree_node_get_left(node), scopes);
-            scopes = symbol_scope_pop_scope(scopes);
+            {
+                scopes = symbol_scope_push_scope(scopes);
+                traverse_tree(tree_node_get_left(node), scopes);
+                scopes = symbol_scope_pop_scope(scopes);
+            }
             break;
 
         case TREE_NODE_VAR_SECTION_BLOCO:
-            scopes = symbol_scope_push_scope(scopes);
-            traverse_tree(tree_node_get_right(node), scopes);
-            traverse_tree(tree_node_get_left(node), scopes);
-            scopes = symbol_scope_pop_scope(scopes);
+            {
+                scopes = symbol_scope_push_scope(scopes);
+                traverse_tree(tree_node_get_right(node), scopes);
+                traverse_tree(tree_node_get_left(node), scopes);
+                scopes = symbol_scope_pop_scope(scopes);
+            }
             break;
 
         case TREE_NODE_VAR_SECTION:
-            traverse_tree(tree_node_get_left(node), scopes);
+            {
+                traverse_tree(tree_node_get_left(node), scopes);
+            }
             break;
 
         case TREE_NODE_LISTA_DECL_VAR:
-            traverse_tree(tree_node_get_left(node), scopes);
-            traverse_tree(tree_node_get_right(node), scopes);
+            {
+                traverse_tree(tree_node_get_left(node), scopes);
+                traverse_tree(tree_node_get_right(node), scopes);
+            }
             break;
 
         case TREE_NODE_DECL_VAR:
-            TreeNodeDataType type = tree_node_get_data_type(node);
+            {
+                TreeNodeDataType type = tree_node_get_data_type(node);
 
-            while (node != NULL) {
-                const char* name = tree_node_get_lexeme(node);
+                while (node != NULL) {
+                    const char* name = tree_node_get_lexeme(node);
 
-                if (symbol_scope_check_symbol(scopes, name, true)) {
-                    // TODO: throw an error
-                }
-                else {
-                    switch (type) {
-                        case TREE_NODE_INTEGER:
-                            symbol_scope_add_symbol(scopes, name, SYMBOL_INTEGER);
-                            break;
-                        case TREE_NODE_CHARACTER:
-                            symbol_scope_add_symbol(scopes, name, SYMBOL_CHARACTER);
-                            break;
+                    if (symbol_scope_check_symbol(scopes, name, true)) {
+                        snprintf(message, sizeof(message), "Variável '%s' já declarada nesse escopo", name);
+                        report_semantic_error(message, node);
                     }
-                }
+                    else {
+                        switch (type) {
+                            case TREE_NODE_INTEGER:
+                                symbol_scope_add_symbol(scopes, name, SYMBOL_INTEGER);
+                                break;
+                            case TREE_NODE_CHARACTER:
+                                symbol_scope_add_symbol(scopes, name, SYMBOL_CHARACTER);
+                                break;
+                        }
+                    }
 
-                tree_node_set_type(node, type);
-                node = tree_node_get_left(node);
+                    tree_node_set_type(node, type);
+                    node = tree_node_get_left(node);
+                }
             }
 
             break;
@@ -105,26 +120,34 @@ void traverse_tree(TreeNode* node, SymbolScope* scopes) {
             break;
 
         case TREE_NODE_LISTA_COMANDO:
-            traverse_tree(tree_node_get_left(node), scopes);
-            traverse_tree(tree_node_get_right(node), scopes);
+            {
+                traverse_tree(tree_node_get_left(node), scopes);
+                traverse_tree(tree_node_get_right(node), scopes);
+            }
             break;
 
         case TREE_NODE_COMANDO:
             break;
 
         case TREE_NODE_LEIA:
-            const char* name = tree_node_get_lexeme(node);
+            {
+                const char* name = tree_node_get_lexeme(node);
 
-            if (!symbol_scope_check_symbol(scopes, name, false)) {
-                // TODO: throw an error
+                if (!symbol_scope_check_symbol(scopes, name, false)) {
+                    snprintf(message, sizeof(message), "Variável '%s' não declarada previamente", name);
+                    report_semantic_error(message, node);
+                }
             }
 
             break;
 
         case TREE_NODE_ESCREVA_EXPRESSAO:
-            traverse_tree(tree_node_get_left(node), scopes);
+            {
+                traverse_tree(tree_node_get_left(node), scopes);
 
-            // TODO: decide if boolean is printable or not
+                // TODO: decide if boolean is printable or not
+            }
+
             break;
 
         case TREE_NODE_ESCREVA_CADEIACARACTERES:
@@ -134,354 +157,463 @@ void traverse_tree(TreeNode* node, SymbolScope* scopes) {
             break;
 
         case TREE_NODE_SE_ENTAO:
-            TreeNode* expression = tree_node_get_left(node);
-            traverse_tree(expression, scopes);
+            {
+                TreeNode* expression = tree_node_get_left(node);
+                traverse_tree(expression, scopes);
 
-            if (tree_node_get_data_type(expression) != TREE_NODE_BOOLEAN) {
-                // TODO: throw an error
+                if (tree_node_get_data_type(expression) != TREE_NODE_BOOLEAN) {
+                    snprintf(message, sizeof(message), "Expressão condicional deve ter valor lógico");
+                    report_semantic_error(message, expression);
+                }
+
+                traverse_tree(tree_node_get_right(node), scopes);
             }
 
-            traverse_tree(tree_node_get_right(node), scopes);
             break;
 
         case TREE_NODE_SE_ENTAO_SENAO:
-            TreeNode* expression = tree_node_get_left(node);
-            traverse_tree(expression, scopes);
+            {
+                TreeNode* expression = tree_node_get_left(node);
+                traverse_tree(expression, scopes);
 
-            if (tree_node_get_data_type(expression) != TREE_NODE_BOOLEAN) {
-                // TODO: throw an error
+                if (tree_node_get_data_type(expression) != TREE_NODE_BOOLEAN) {
+                    snprintf(message, sizeof(message), "Expressão condicional deve ter valor lógico");
+                    report_semantic_error(message, expression);
+                }
+
+                traverse_tree(tree_node_get_right(node), scopes);
             }
 
-            traverse_tree(tree_node_get_right(node), scopes);
             break;
 
         case TREE_NODE_ENTAO_SENAO:
-            traverse_tree(tree_node_get_left(node), scopes);
-            traverse_tree(tree_node_get_right(node), scopes);
+            {
+                traverse_tree(tree_node_get_left(node), scopes);
+                traverse_tree(tree_node_get_right(node), scopes);
+            }
             break;
 
         case TREE_NODE_ENQUANTO:
-            TreeNode* expression = tree_node_get_left(node);
-            traverse_tree(expression, scopes);
+            {
+                TreeNode* expression = tree_node_get_left(node);
+                traverse_tree(expression, scopes);
 
-            if (tree_node_get_data_type(expression) != TREE_NODE_BOOLEAN) {
-                // TODO: throw an error
+                if (tree_node_get_data_type(expression) != TREE_NODE_BOOLEAN) {
+                    snprintf(message, sizeof(message), "Expressão condicional deve ter valor lógico");
+                    report_semantic_error(message, expression);
+                }
+
+                traverse_tree(tree_node_get_right(node), scopes);
             }
-
-            traverse_tree(tree_node_get_right(node), scopes);
             break;
         
         case TREE_NODE_ASSIGN_EXPR:
-            const char* name = tree_node_get_lexeme(node);
+            {
+                const char* name = tree_node_get_lexeme(node);
 
-            if (!symbol_scope_check_symbol(scopes, name, false)) {
-                // TODO: throw an error
-            }
-
-            TreeNode* expression = tree_node_get_left(node);
-            traverse_tree(expression, scopes);
-
-            TreeNodeDataType type = tree_node_get_data_type(expression);
-
-            if (type == TREE_NODE_INTEGER) {
-                if (symbol_scope_get_data_type(scopes, name, false) != SYMBOL_INTEGER) {
-                    // TODO: throw an error
+                if (!symbol_scope_check_symbol(scopes, name, false)) {
+                    snprintf(message, sizeof(message), "Variável '%s' não declarada previamente", name);
+                    report_semantic_error(message, node);
                 }
-            }
-            else if (type == TREE_NODE_CHARACTER) {
-                if (symbol_scope_get_data_type(scopes, name, false) != SYMBOL_CHARACTER) {
-                    // TODO: throw an error
+
+                TreeNode* expression = tree_node_get_left(node);
+                traverse_tree(expression, scopes);
+
+                SymbolDataType type = symbol_scope_get_data_type(scopes, name, false);
+
+                if (type == SYMBOL_INTEGER) {
+                    if (tree_node_get_data_type(expression) != TREE_NODE_INTEGER) {
+                        snprintf(message, sizeof(message), "O valor da expressão deve ser do tipo 'inteiro' para ser atribuída à variável '%s'", name);
+                        report_semantic_error(message, expression);
+                    }
                 }
-            }
-            else {
-                // TODO: throw an error
+                else if (type == SYMBOL_CHARACTER) {
+                    if (tree_node_get_data_type(expression) != TREE_NODE_CHARACTER) {
+                        snprintf(message, sizeof(message), "O valor da expressão deve ser do tipo 'caractere' para ser atribuída à variável '%s'", name);
+                        report_semantic_error(message, expression);
+                    }
+                }
+                else {
+                    snprintf(message, sizeof(message), "A atribuição de valores só pode ser feito para valores dos tipos 'inteiro' ou 'caractere'");
+                    report_semantic_error(message, node);
+                }
             }
 
             break;
 
         case TREE_NODE_OR_EXPR:
-            TreeNode* left = tree_node_get_left(node);
-            TreeNode* right = tree_node_get_right(node);
+            {
+                TreeNode* left = tree_node_get_left(node);
+                TreeNode* right = tree_node_get_right(node);
 
-            traverse_tree(left, scopes);
-            traverse_tree(right, scopes);
+                traverse_tree(left, scopes);
+                traverse_tree(right, scopes);
 
-            TreeNodeDataType left_type = tree_node_get_data_type(left);
-            TreeNodeDataType right_type = tree_node_get_data_type(right);
+                TreeNodeDataType left_type = tree_node_get_data_type(left);
+                TreeNodeDataType right_type = tree_node_get_data_type(right);
 
-            if (left_type != TREE_NODE_BOOLEAN || right_type != TREE_NODE_BOOLEAN) {
-                // TODO: throw an error
-            }
-            else {
-                tree_node_set_type(node, TREE_NODE_BOOLEAN);
+                if (left_type != TREE_NODE_BOOLEAN) {
+                    snprintf(message, sizeof(message), "O primeiro operando deve ter valor lógico");
+                    report_semantic_error(message, left);
+                }
+                else if (right_type != TREE_NODE_BOOLEAN) {
+                    snprintf(message, sizeof(message), "O segundo operando deve ter valor lógico");
+                    report_semantic_error(message, right);
+                }
+                else {
+                    tree_node_set_type(node, TREE_NODE_BOOLEAN);
+                }
             }
 
             break;
 
         case TREE_NODE_AND_EXPR:
-            TreeNode* left = tree_node_get_left(node);
-            TreeNode* right = tree_node_get_right(node);
+            {
+                TreeNode* left = tree_node_get_left(node);
+                TreeNode* right = tree_node_get_right(node);
 
-            traverse_tree(left, scopes);
-            traverse_tree(right, scopes);
+                traverse_tree(left, scopes);
+                traverse_tree(right, scopes);
 
-            TreeNodeDataType left_type = tree_node_get_data_type(left);
-            TreeNodeDataType right_type = tree_node_get_data_type(right);
+                TreeNodeDataType left_type = tree_node_get_data_type(left);
+                TreeNodeDataType right_type = tree_node_get_data_type(right);
 
-            if (left_type != TREE_NODE_BOOLEAN || right_type != TREE_NODE_BOOLEAN) {
-                // TODO: throw an error
-            }
-            else {
-                tree_node_set_type(node, TREE_NODE_BOOLEAN);
+                if (left_type != TREE_NODE_BOOLEAN) {
+                    snprintf(message, sizeof(message), "O primeiro operando deve ter valor lógico");
+                    report_semantic_error(message, left);
+                }
+                else if (right_type != TREE_NODE_BOOLEAN) {
+                    snprintf(message, sizeof(message), "O segundo operando deve ter valor lógico");
+                    report_semantic_error(message, right);
+                }
+                else {
+                    tree_node_set_type(node, TREE_NODE_BOOLEAN);
+                }
             }
 
             break;
 
         case TREE_NODE_EQ_EXPR:
-            TreeNode* left = tree_node_get_left(node);
-            TreeNode* right = tree_node_get_right(node);
+            {
+                TreeNode* left = tree_node_get_left(node);
+                TreeNode* right = tree_node_get_right(node);
 
-            traverse_tree(left, scopes);
-            traverse_tree(right, scopes);
+                traverse_tree(left, scopes);
+                traverse_tree(right, scopes);
 
-            TreeNodeDataType left_type = tree_node_get_data_type(left);
-            TreeNodeDataType right_type = tree_node_get_data_type(right);
+                TreeNodeDataType left_type = tree_node_get_data_type(left);
+                TreeNodeDataType right_type = tree_node_get_data_type(right);
 
-            if (left_type == TREE_NODE_STRING || left_type == TREE_NODE_NOTYPE) {
-                // TODO: throw an error
-            }
-            else if (right_type == TREE_NODE_STRING || right_type == TREE_NODE_NOTYPE) {
-                // TODO: throw an error
-            }
-            else if (left_type != right_type) {
-                // TODO: throw an error
-            }
-            else {
-                tree_node_set_type(node, TREE_NODE_BOOLEAN);
+                if (left_type == TREE_NODE_STRING || left_type == TREE_NODE_NOTYPE) {
+                    snprintf(message, sizeof(message), "O primeiro operando deve ter valor dos tipos 'inteiro' ou 'caractere'");
+                    report_semantic_error(message, left);
+                }
+                else if (right_type == TREE_NODE_STRING || right_type == TREE_NODE_NOTYPE) {
+                    snprintf(message, sizeof(message), "O segundo operando deve ter valor dos tipos 'inteiro' ou 'caractere'");
+                    report_semantic_error(message, right);
+                }
+                else if (left_type != right_type) {
+                    snprintf(message, sizeof(message), "Ambos os operandos devem ter valores dos mesmos tipos");
+                    report_semantic_error(message, node);
+                }
+                else {
+                    tree_node_set_type(node, TREE_NODE_BOOLEAN);
+                }
             }
 
             break;
 
         case TREE_NODE_NEQ_EXPR:
-            TreeNode* left = tree_node_get_left(node);
-            TreeNode* right = tree_node_get_right(node);
+            {
+                TreeNode* left = tree_node_get_left(node);
+                TreeNode* right = tree_node_get_right(node);
 
-            traverse_tree(left, scopes);
-            traverse_tree(right, scopes);
+                traverse_tree(left, scopes);
+                traverse_tree(right, scopes);
 
-            TreeNodeDataType left_type = tree_node_get_data_type(left);
-            TreeNodeDataType right_type = tree_node_get_data_type(right);
+                TreeNodeDataType left_type = tree_node_get_data_type(left);
+                TreeNodeDataType right_type = tree_node_get_data_type(right);
 
-            if (left_type == TREE_NODE_STRING || left_type == TREE_NODE_NOTYPE) {
-                // TODO: throw an error
-            }
-            else if (right_type == TREE_NODE_STRING || right_type == TREE_NODE_NOTYPE) {
-                // TODO: throw an error
-            }
-            else if (left_type != right_type) {
-                // TODO: throw an error
-            }
-            else {
-                tree_node_set_type(node, TREE_NODE_BOOLEAN);
+                if (left_type == TREE_NODE_STRING || left_type == TREE_NODE_NOTYPE) {
+                    snprintf(message, sizeof(message), "O primeiro operando deve ter valor dos tipos 'inteiro' ou 'caractere'");
+                    report_semantic_error(message, left);
+                }
+                else if (right_type == TREE_NODE_STRING || right_type == TREE_NODE_NOTYPE) {
+                    snprintf(message, sizeof(message), "O segundo operando deve ter valor dos tipos 'inteiro' ou 'caractere'");
+                    report_semantic_error(message, right);
+                }
+                else if (left_type != right_type) {
+                    snprintf(message, sizeof(message), "Ambos os operandos devem ter valores dos mesmos tipos");
+                    report_semantic_error(message, node);
+                }
+                else {
+                    tree_node_set_type(node, TREE_NODE_BOOLEAN);
+                }
             }
 
             break;
 
         case TREE_NODE_LE_EXPR:
-            TreeNode* left = tree_node_get_left(node);
-            TreeNode* right = tree_node_get_right(node);
+            {
+                TreeNode* left = tree_node_get_left(node);
+                TreeNode* right = tree_node_get_right(node);
 
-            traverse_tree(left, scopes);
-            traverse_tree(right, scopes);
+                traverse_tree(left, scopes);
+                traverse_tree(right, scopes);
 
-            TreeNodeDataType left_type = tree_node_get_data_type(left);
-            TreeNodeDataType right_type = tree_node_get_data_type(right);
+                TreeNodeDataType left_type = tree_node_get_data_type(left);
+                TreeNodeDataType right_type = tree_node_get_data_type(right);
 
-            if (left_type != TREE_NODE_INTEGER || right_type != TREE_NODE_INTEGER) {
-                // TODO: throw an error
-            }
-            else {
-                tree_node_set_type(node, TREE_NODE_BOOLEAN);
+                if (left_type != TREE_NODE_INTEGER) {
+                    snprintf(message, sizeof(message), "O primeiro operando deve ter valor do tipo 'inteiro'");
+                    report_semantic_error(message, left);
+                }
+                else if (right_type != TREE_NODE_INTEGER) {
+                    snprintf(message, sizeof(message), "O segundo operando deve ter valor do tipo 'inteiro'");
+                    report_semantic_error(message, right);
+                }
+                else {
+                    tree_node_set_type(node, TREE_NODE_BOOLEAN);
+                }
             }
 
             break;
 
         case TREE_NODE_GE_EXPR:
-            TreeNode* left = tree_node_get_left(node);
-            TreeNode* right = tree_node_get_right(node);
+            {
+                TreeNode* left = tree_node_get_left(node);
+                TreeNode* right = tree_node_get_right(node);
 
-            traverse_tree(left, scopes);
-            traverse_tree(right, scopes);
+                traverse_tree(left, scopes);
+                traverse_tree(right, scopes);
 
-            TreeNodeDataType left_type = tree_node_get_data_type(left);
-            TreeNodeDataType right_type = tree_node_get_data_type(right);
+                TreeNodeDataType left_type = tree_node_get_data_type(left);
+                TreeNodeDataType right_type = tree_node_get_data_type(right);
 
-            if (left_type != TREE_NODE_INTEGER || right_type != TREE_NODE_INTEGER) {
-                // TODO: throw an error
-            }
-            else {
-                tree_node_set_type(node, TREE_NODE_BOOLEAN);
+                if (left_type != TREE_NODE_INTEGER) {
+                    snprintf(message, sizeof(message), "O primeiro operando deve ter valor do tipo 'inteiro'");
+                    report_semantic_error(message, left);
+                }
+                else if (right_type != TREE_NODE_INTEGER) {
+                    snprintf(message, sizeof(message), "O segundo operando deve ter valor do tipo 'inteiro'");
+                    report_semantic_error(message, right);
+                }
+                else {
+                    tree_node_set_type(node, TREE_NODE_BOOLEAN);
+                }
             }
 
             break;
             
         case TREE_NODE_LEQ_EXPR:
-            TreeNode* left = tree_node_get_left(node);
-            TreeNode* right = tree_node_get_right(node);
+            {
+                TreeNode* left = tree_node_get_left(node);
+                TreeNode* right = tree_node_get_right(node);
 
-            traverse_tree(left, scopes);
-            traverse_tree(right, scopes);
+                traverse_tree(left, scopes);
+                traverse_tree(right, scopes);
 
-            TreeNodeDataType left_type = tree_node_get_data_type(left);
-            TreeNodeDataType right_type = tree_node_get_data_type(right);
+                TreeNodeDataType left_type = tree_node_get_data_type(left);
+                TreeNodeDataType right_type = tree_node_get_data_type(right);
 
-            if (left_type != TREE_NODE_INTEGER || right_type != TREE_NODE_INTEGER) {
-                // TODO: throw an error
-            }
-            else {
-                tree_node_set_type(node, TREE_NODE_BOOLEAN);
+                if (left_type != TREE_NODE_INTEGER) {
+                    snprintf(message, sizeof(message), "O primeiro operando deve ter valor do tipo 'inteiro'");
+                    report_semantic_error(message, left);
+                }
+                else if (right_type != TREE_NODE_INTEGER) {
+                    snprintf(message, sizeof(message), "O segundo operando deve ter valor do tipo 'inteiro'");
+                    report_semantic_error(message, right);
+                }
+                else {
+                    tree_node_set_type(node, TREE_NODE_BOOLEAN);
+                }
             }
 
             break;
 
         case TREE_NODE_GEQ_EXPR:
-            TreeNode* left = tree_node_get_left(node);
-            TreeNode* right = tree_node_get_right(node);
+            {
+                TreeNode* left = tree_node_get_left(node);
+                TreeNode* right = tree_node_get_right(node);
 
-            traverse_tree(left, scopes);
-            traverse_tree(right, scopes);
+                traverse_tree(left, scopes);
+                traverse_tree(right, scopes);
 
-            TreeNodeDataType left_type = tree_node_get_data_type(left);
-            TreeNodeDataType right_type = tree_node_get_data_type(right);
+                TreeNodeDataType left_type = tree_node_get_data_type(left);
+                TreeNodeDataType right_type = tree_node_get_data_type(right);
 
-            if (left_type != TREE_NODE_INTEGER || right_type != TREE_NODE_INTEGER) {
-                // TODO: throw an error
-            }
-            else {
-                tree_node_set_type(node, TREE_NODE_BOOLEAN);
+                if (left_type != TREE_NODE_INTEGER) {
+                    snprintf(message, sizeof(message), "O primeiro operando deve ter valor do tipo 'inteiro'");
+                    report_semantic_error(message, left);
+                }
+                else if (right_type != TREE_NODE_INTEGER) {
+                    snprintf(message, sizeof(message), "O segundo operando deve ter valor do tipo 'inteiro'");
+                    report_semantic_error(message, right);
+                }
+                else {
+                    tree_node_set_type(node, TREE_NODE_BOOLEAN);
+                }
             }
 
             break;
 
         case TREE_NODE_ADD_EXPR:
-            TreeNode* left = tree_node_get_left(node);
-            TreeNode* right = tree_node_get_right(node);
+            {
+                TreeNode* left = tree_node_get_left(node);
+                TreeNode* right = tree_node_get_right(node);
 
-            traverse_tree(left, scopes);
-            traverse_tree(right, scopes);
+                traverse_tree(left, scopes);
+                traverse_tree(right, scopes);
 
-            TreeNodeDataType left_type = tree_node_get_data_type(left);
-            TreeNodeDataType right_type = tree_node_get_data_type(right);
+                TreeNodeDataType left_type = tree_node_get_data_type(left);
+                TreeNodeDataType right_type = tree_node_get_data_type(right);
 
-            if (left_type != TREE_NODE_INTEGER || right_type != TREE_NODE_INTEGER) {
-                // TODO: throw an error
-            }
-            else {
-                tree_node_set_type(node, TREE_NODE_INTEGER);
+                if (left_type != TREE_NODE_INTEGER) {
+                    snprintf(message, sizeof(message), "O primeiro operando deve ter valor do tipo 'inteiro'");
+                    report_semantic_error(message, left);
+                }
+                else if (right_type != TREE_NODE_INTEGER) {
+                    snprintf(message, sizeof(message), "O segundo operando deve ter valor do tipo 'inteiro'");
+                    report_semantic_error(message, right);
+                }
+                else {
+                    tree_node_set_type(node, TREE_NODE_INTEGER);
+                }
             }
 
             break;
 
         case TREE_NODE_SUB_EXPR:
-            TreeNode* left = tree_node_get_left(node);
-            TreeNode* right = tree_node_get_right(node);
+            {
+                TreeNode* left = tree_node_get_left(node);
+                TreeNode* right = tree_node_get_right(node);
 
-            traverse_tree(left, scopes);
-            traverse_tree(right, scopes);
+                traverse_tree(left, scopes);
+                traverse_tree(right, scopes);
 
-            TreeNodeDataType left_type = tree_node_get_data_type(left);
-            TreeNodeDataType right_type = tree_node_get_data_type(right);
+                TreeNodeDataType left_type = tree_node_get_data_type(left);
+                TreeNodeDataType right_type = tree_node_get_data_type(right);
 
-            if (left_type != TREE_NODE_INTEGER || right_type != TREE_NODE_INTEGER) {
-                // TODO: throw an error
-            }
-            else {
-                tree_node_set_type(node, TREE_NODE_INTEGER);
+                if (left_type != TREE_NODE_INTEGER) {
+                    snprintf(message, sizeof(message), "O primeiro operando deve ter valor do tipo 'inteiro'");
+                    report_semantic_error(message, left);
+                }
+                else if (right_type != TREE_NODE_INTEGER) {
+                    snprintf(message, sizeof(message), "O segundo operando deve ter valor do tipo 'inteiro'");
+                    report_semantic_error(message, right);
+                }
+                else {
+                    tree_node_set_type(node, TREE_NODE_INTEGER);
+                }
             }
 
             break;
 
         case TREE_NODE_MUL_EXPR:
-            TreeNode* left = tree_node_get_left(node);
-            TreeNode* right = tree_node_get_right(node);
+            {
+                TreeNode* left = tree_node_get_left(node);
+                TreeNode* right = tree_node_get_right(node);
 
-            traverse_tree(left, scopes);
-            traverse_tree(right, scopes);
+                traverse_tree(left, scopes);
+                traverse_tree(right, scopes);
 
-            TreeNodeDataType left_type = tree_node_get_data_type(left);
-            TreeNodeDataType right_type = tree_node_get_data_type(right);
+                TreeNodeDataType left_type = tree_node_get_data_type(left);
+                TreeNodeDataType right_type = tree_node_get_data_type(right);
 
-            if (left_type != TREE_NODE_INTEGER || right_type != TREE_NODE_INTEGER) {
-                // TODO: throw an error
-            }
-            else {
-                tree_node_set_type(node, TREE_NODE_INTEGER);
+                if (left_type != TREE_NODE_INTEGER) {
+                    snprintf(message, sizeof(message), "O primeiro operando deve ter valor do tipo 'inteiro'");
+                    report_semantic_error(message, left);
+                }
+                else if (right_type != TREE_NODE_INTEGER) {
+                    snprintf(message, sizeof(message), "O segundo operando deve ter valor do tipo 'inteiro'");
+                    report_semantic_error(message, right);
+                }
+                else {
+                    tree_node_set_type(node, TREE_NODE_INTEGER);
+                }
             }
 
             break;
 
         case TREE_NODE_DIV_EXPR:
-            TreeNode* left = tree_node_get_left(node);
-            TreeNode* right = tree_node_get_right(node);
+            {
+                TreeNode* left = tree_node_get_left(node);
+                TreeNode* right = tree_node_get_right(node);
 
-            traverse_tree(left, scopes);
-            traverse_tree(right, scopes);
+                traverse_tree(left, scopes);
+                traverse_tree(right, scopes);
 
-            TreeNodeDataType left_type = tree_node_get_data_type(left);
-            TreeNodeDataType right_type = tree_node_get_data_type(right);
+                TreeNodeDataType left_type = tree_node_get_data_type(left);
+                TreeNodeDataType right_type = tree_node_get_data_type(right);
 
-            if (left_type != TREE_NODE_INTEGER || right_type != TREE_NODE_INTEGER) {
-                // TODO: throw an error
-            }
-            else {
-                tree_node_set_type(node, TREE_NODE_INTEGER);
+                if (left_type != TREE_NODE_INTEGER) {
+                    snprintf(message, sizeof(message), "O primeiro operando deve ter valor do tipo 'inteiro'");
+                    report_semantic_error(message, left);
+                }
+                else if (right_type != TREE_NODE_INTEGER) {
+                    snprintf(message, sizeof(message), "O segundo operando deve ter valor do tipo 'inteiro'");
+                    report_semantic_error(message, right);
+                }
+                else {
+                    tree_node_set_type(node, TREE_NODE_INTEGER);
+                }
             }
 
             break;
 
         case TREE_NODE_MINUS_EXPR:
-            TreeNode* expression = tree_node_get_left(node);
-            traverse_tree(expression, scopes);
+            {
+                TreeNode* expression = tree_node_get_left(node);
+                traverse_tree(expression, scopes);
 
-            if (tree_node_get_data_type(expression) != TREE_NODE_INTEGER) {
-                // TODO: throw an error
-            }
-            else {
-                tree_node_set_type(node, TREE_NODE_INTEGER);
+                if (tree_node_get_data_type(expression) != TREE_NODE_INTEGER) {
+                    snprintf(message, sizeof(message), "O operando deve ter valor do tipo 'inteiro'");
+                    report_semantic_error(message, expression);
+                }
+                else {
+                    tree_node_set_type(node, TREE_NODE_INTEGER);
+                }
             }
 
             break;
 
         case TREE_NODE_NEG_EXPR:
-            TreeNode* expression = tree_node_get_left(node);
-            traverse_tree(expression, scopes);
+            {
+                TreeNode* expression = tree_node_get_left(node);
+                traverse_tree(expression, scopes);
 
-            if (tree_node_get_data_type(expression) != TREE_NODE_BOOLEAN) {
-                // TODO: throw an error
-            }
-            else {
-                tree_node_set_type(node, TREE_NODE_BOOLEAN);
+                if (tree_node_get_data_type(expression) != TREE_NODE_BOOLEAN) {
+                    snprintf(message, sizeof(message), "O operando deve ter valor lógico");
+                    report_semantic_error(message, expression);
+                }
+                else {
+                    tree_node_set_type(node, TREE_NODE_BOOLEAN);
+                }
             }
 
             break;
 
         case TREE_NODE_IDENTIFICADOR:
-            const char* name = tree_node_get_lexeme(node);
+            {
+                const char* name = tree_node_get_lexeme(node);
 
-            if (!symbol_scope_check_symbol(scopes, name, false)) {
-                // TODO: throw an error
-            }
+                if (!symbol_scope_check_symbol(scopes, name, false)) {
+                    snprintf(message, sizeof(message), "Variável '%s' não declarada previamente", name);
+                    report_semantic_error(message, node);
+                }
 
-            SymbolDataType type = symbol_scope_get_data_type(scopes, name, false);
+                SymbolDataType type = symbol_scope_get_data_type(scopes, name, false);
 
-            if (type == SYMBOL_INTEGER) {
-                tree_node_set_type(node, TREE_NODE_INTEGER);
-            }
-            else if (type == SYMBOL_CHARACTER) {
-                tree_node_set_type(node, TREE_NODE_CHARACTER);
-            }
-            else {
-                // TODO: throw an error
+                if (type == SYMBOL_INTEGER) {
+                    tree_node_set_type(node, TREE_NODE_INTEGER);
+                }
+                else if (type == SYMBOL_CHARACTER) {
+                    tree_node_set_type(node, TREE_NODE_CHARACTER);
+                }
+                else {
+                    snprintf(message, sizeof(message), "A variável '%s' devem ser do tipo 'inteiro' ou 'caractere'", name);
+                    report_semantic_error(message, node);
+                }
             }
 
             break;
@@ -493,7 +625,10 @@ void traverse_tree(TreeNode* node, SymbolScope* scopes) {
             break;
 
         case TREE_NODE_NOKIND:
-            // TODO: throw an error
+            {
+                snprintf(message, sizeof(message), "Algo inesperado ocorreu");
+                report_semantic_error(message, node);
+            }
             break;
 
         default:
