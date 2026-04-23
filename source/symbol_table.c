@@ -72,6 +72,48 @@ void symbol_entry_delete(SymbolEntry* symbol) {
     free_memory(symbol);
 }
 
+/**
+ * @brief Get symbol data type
+ * 
+ * @param symbol Symbol
+ * @return SymbolDataType Data type of the symbol
+ */
+SymbolDataType symbol_entry_get_data_type(SymbolEntry* symbol) {
+    if (symbol == NULL) {
+        return SYMBOL_NOTYPE;
+    }
+
+    return symbol->type;
+}
+
+/**
+ * @brief Get symbol scope level
+ * 
+ * @param symbol Symbol
+ * @return int Scope level of the symbol
+ */
+int symbol_entry_get_level(SymbolEntry* symbol) {
+    if (symbol == NULL) {
+        return 0;
+    }
+
+    return symbol->level;
+}
+
+/**
+ * @brief Get symbol position
+ * 
+ * @param symbol Symbol
+ * @return int Symbol position
+ */
+int symbol_entry_get_position(SymbolEntry* symbol) {
+    if (symbol == NULL) {
+        return 0;
+    }
+
+    return symbol->position;
+}
+
 // -------------------- Symbol Table -------------------- //
 
 /**
@@ -176,15 +218,15 @@ bool symbol_table_check_symbol(SymbolTable* symbol_table, const char* name) {
 }
 
 /**
- * @brief Get the data type of a symbol in symbol table
+ * @brief Get the symbol entry object from symbol table by name
  * 
  * @param symbol_table Symbol table
  * @param name Name of the symbol
- * @return SymbolDataType Symbol data type
+ * @return SymbolEntry* Symbol entry object
  */
-SymbolDataType symbol_table_get_data_type(SymbolTable* symbol_table, const char* name) {
+SymbolEntry* symbol_table_get_data_type(SymbolTable* symbol_table, const char* name) {
     if (symbol_table == NULL || name == NULL) {
-        return SYMBOL_NOTYPE;
+        return NULL;
     }
 
     int i = compute_hash(name);
@@ -192,92 +234,12 @@ SymbolDataType symbol_table_get_data_type(SymbolTable* symbol_table, const char*
 
     while (symbol != NULL) {
         if (strcmp(name, symbol->name) == 0) {
-            return symbol->type;
+            return symbol;
         }
     }
 
-    return SYMBOL_NOTYPE;
+    return NULL;
 }
-
-/**
- * @brief Get the scope level of a symbol in symbol table
- * 
- * @param symbol_table Symbol table
- * @param name Name of the symbol
- * @return int Symbol scope level
- */
-int symbol_table_get_level(SymbolTable* symbol_table, const char* name) {
-    if (symbol_table == NULL || name == NULL) {
-        return 0;
-    }
-
-    int i = compute_hash(name);
-    SymbolEntry* symbol = symbol_table->table[i];
-
-    while (symbol != NULL) {
-        if (strcmp(name, symbol->name) == 0) {
-            return symbol->level;
-        }
-    }
-
-    return 0;
-}
-
-/**
- * @brief Get the position of a symbol in symbol table
- * 
- * @param symbol_table Symbol table
- * @param name Name of the symbol
- * @return int Symbol position
- */
-int symbol_table_get_position(SymbolTable* symbol_table, const char* name) {
-    if (symbol_table == NULL || name == NULL) {
-        return 0;
-    }
-
-    int i = compute_hash(name);
-    SymbolEntry* symbol = symbol_table->table[i];
-
-    while (symbol != NULL) {
-        if (strcmp(name, symbol->name) == 0) {
-            return symbol->position;
-        }
-    }
-
-    return 0;
-}
-
-// /**
-//  * @brief Get a list with all symbols in the table
-//  * 
-//  * @param symbol_table Symbol table
-//  * @return SymbolEntry* A list with all symbols in the table
-//  */
-// SymbolEntry* symbol_table_get_symbols(SymbolTable* symbol_table) {
-//     if (symbol_table == NULL) {
-//         return NULL;
-//     }
-
-//     SymbolEntry* symbols = NULL;
-
-//     for (int i = 0; i < TABLE_SIZE; i++) {
-//         SymbolEntry* symbol = symbol_table->table[i];
-
-//         while (symbol != NULL) {
-//             SymbolEntry* new_symbol = symbol_entry_create(symbol->name, symbol->type, symbol->level, symbol->position);
-
-//             if (symbols == NULL) {
-//                 symbols = new_symbol;
-//             }
-//             else {
-//                 new_symbol->next = symbol;
-//                 symbol = new_symbol;
-//             }
-//         }
-//     }
-
-//     return symbols;
-// }
 
 // -------------------- Symbol Scope -------------------- //
 
@@ -401,109 +363,32 @@ bool symbol_scope_check_symbol(SymbolScope* symbol_scope, const char* name, bool
 }
 
 /**
- * @brief Get the data type of an symbol in some symbol table of symbol scope stack
+ * @brief Get symbol entry object from symbol scope by the name
  * 
- * @param symbol_scope Symbol scope stack
+ * @param symbol_scope Symbol scope
  * @param name Name of the symbol
- * @param current_scope If search is in current or all scopes
- * @return SymbolDataType The data type of symbol
+ * @param current_scope If search should be done in current or all scopes
+ * @return SymbolEntry* Symbol entry object
  */
-SymbolDataType symbol_scope_get_data_type(SymbolScope* symbol_scope, const char* name, bool current_scope) {
+SymbolEntry* symbol_scope_get_symbol(SymbolScope* symbol_scope, const char* name, bool current_scope) {
     if (symbol_scope == NULL) {
-        return SYMBOL_NOTYPE;
+        return NULL;
     }
 
     if (current_scope) {
-        return symbol_table_get_data_type(symbol_scope->symbol_table, name);
+        return symbol_table_get_symbol(symbol_scope->symbol_table, name);
     }
     else {
         while (symbol_scope != NULL) {
-            SymbolDataType type = symbol_table_get_data_type(symbol_scope->symbol_table, name);
+            SymbolEntry* symbol = symbol_table_get_symbol(symbol_scope->symbol_table, name);
 
-            if (type != SYMBOL_NOTYPE) {
-                return type;
+            if (symbol != NULL) {
+                return symbol;
             }
 
             symbol_scope = symbol_scope->next;
         }
     }
 
-    return SYMBOL_NOTYPE;
+    return NULL;
 }
-
-/**
- * @brief Get the scope level of a symbol in some symbol table of symbol scope stack
- * 
- * @param symbol_scope Symbol scope stack
- * @param name Name of the symbol
- * @param current_scope If search is in current or all scopes
- * @return int The scope level of symbol
- */
-int symbol_scope_get_level(SymbolScope* symbol_scope, const char* name, bool current_scope) {
-    if (symbol_scope == NULL) {
-        return 0;
-    }
-
-    if (current_scope) {
-        return symbol_table_get_level(symbol_scope->symbol_table, name);
-    }
-    else {
-        while (symbol_scope != NULL) {
-            int level = symbol_table_get_level(symbol_scope->symbol_table, name);
-
-            if (level != 0) {
-                return level;
-            }
-
-            symbol_scope = symbol_scope->next;
-        }
-    }
-
-    return 0;
-}
-
-/**
- * @brief Get the position of a symbol in some symbol table of symbol scope stack
- * 
- * @param symbol_scope Symbol scope stack
- * @param name Name of the symbol
- * @param current_scope If search is in current or all scopes
- * @return int The position of symbol
- */
-int symbol_scope_get_position(SymbolScope* symbol_scope, const char* name, bool current_scope) {
-    if (symbol_scope == NULL) {
-        return 0;
-    }
-
-    if (current_scope) {
-        return symbol_table_get_position(symbol_scope->symbol_table, name);
-    }
-    else {
-        while (symbol_scope != NULL) {
-            int level = symbol_table_get_position(symbol_scope->symbol_table, name);
-
-            if (level != 0) {
-                return level;
-            }
-
-            symbol_scope = symbol_scope->next;
-        }
-    }
-
-    return 0;
-}
-
-
-// /**
-//  * @brief Get all symbols of the top of the symbol scope stack
-//  * 
-//  * @param symbol_scope Symbol scope stack
-//  * @return SymbolEntry* The symbol list of the current symbol scope
-//  */
-// SymbolEntry* symbol_scope_get_symbols(SymbolScope* symbol_scope) {
-//     if (symbol_scope == NULL) {
-//         return NULL;
-//     }
-
-//     return symbol_table_get_symbols(symbol_scope->symbol_table);
-// }
