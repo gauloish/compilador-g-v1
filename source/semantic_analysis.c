@@ -219,7 +219,8 @@ void traverse_tree(TreeNode* node, SymbolScope* scopes) {
                 TreeNode* expression = tree_node_get_left(node);
                 traverse_tree(expression, scopes);
 
-                SymbolDataType type = symbol_scope_get_data_type(scopes, name, false);
+                SymbolEntry* symbol = symbol_scope_get_symbol(scopes, name, false);
+                SymbolDataType type = symbol_entry_get_data_type(symbol);
 
                 if (type == SYMBOL_INTEGER) {
                     if (tree_node_get_data_type(expression) != TREE_NODE_INTEGER) {
