@@ -29,6 +29,12 @@ Para compilar o programa, basta executar o seguinte comando na raiz do projeto:
 make
 ```
 
+E para limpar os arquivos intermediários gerados (arquivos .o e .c), vasta executar:
+
+```sh
+make clean
+```
+
 Quando a compilação encerrar, teremos o executável `g-v1` na raiz do projeto.
 
 ## Execução
