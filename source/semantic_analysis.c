@@ -95,15 +95,11 @@ void traverse_tree(TreeNode* node, SymbolScope* scopes) {
                         snprintf(message, sizeof(message), "Variável '%s' já declarada nesse escopo", name);
                         report_semantic_error(message, node);
                     }
-                    else {
-                        switch (type) {
-                            case TREE_NODE_INTEGER:
-                                symbol_scope_add_symbol(scopes, name, SYMBOL_INTEGER);
-                                break;
-                            case TREE_NODE_CHARACTER:
-                                symbol_scope_add_symbol(scopes, name, SYMBOL_CHARACTER);
-                                break;
-                        }
+                    else if (type == TREE_NODE_INTEGER) {
+                        symbol_scope_add_symbol(scopes, name, SYMBOL_INTEGER);
+                    }
+                    else if (type == TREE_NODE_CHARACTER) {
+                        symbol_scope_add_symbol(scopes, name, SYMBOL_CHARACTER);
                     }
 
                     tree_node_set_type(node, type);
@@ -143,9 +139,15 @@ void traverse_tree(TreeNode* node, SymbolScope* scopes) {
 
         case TREE_NODE_ESCREVA_EXPRESSAO:
             {
-                traverse_tree(tree_node_get_left(node), scopes);
+                TreeNode* expression = tree_node_get_left(node);
+                traverse_tree(expression, scopes);
 
-                // TODO: decide if boolean is printable or not
+                TreeNodeDataType type = tree_node_get_data_type(expression);
+
+                if (type != TREE_NODE_INTEGER && type != TREE_NODE_CHARACTER) {
+                    snprintf(message, sizeof(message), "Expressão deve ter valor do tipo 'inteiro' ou 'caractere' para ser impressa");
+                    report_semantic_error(message, expression);
+                }
             }
 
             break;
