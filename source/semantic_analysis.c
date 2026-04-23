@@ -56,9 +56,10 @@ void traverse_tree(TreeNode* node, SymbolScope* scopes) {
 
         case TREE_NODE_BLOCO:
             {
-                scopes = symbol_scope_push_scope(scopes);
+                // TODO: Check if should remove this scopes
+                // scopes = symbol_scope_push_scope(scopes);
                 traverse_tree(tree_node_get_left(node), scopes);
-                scopes = symbol_scope_pop_scope(scopes);
+                // scopes = symbol_scope_pop_scope(scopes);
             }
             break;
 
@@ -626,6 +627,7 @@ void traverse_tree(TreeNode* node, SymbolScope* scopes) {
             break;
 
         case TREE_NODE_INTCONST:
+            // TODO: Check if int const fit in a 32-bit integer
             break;
 
         case TREE_NODE_NOKIND:

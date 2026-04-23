@@ -25,6 +25,7 @@ void emit(FILE*, const char*, ...);
 void emitb(FILE*, const char*, ...);
 Strings* get_strings(TreeNode*, Strings*);
 Strings* generate_strings(FILE*, TreeNode*);
+void build_instructions(FILE*, TreeNode*, SymbolScope*, Strings*);
 void generate_instructions(FILE*, TreeNode*, Strings*);
 void generate_code(TreeNode*);
 
@@ -249,6 +250,427 @@ Strings* generate_strings(FILE* file, TreeNode* node) {
     return strings;
 }
 
+void build_instructions(FILE* file, TreeNode* node, SymbolScope* scopes, Strings* strings) {
+    if (node == NULL) {
+        return;
+    }
+
+    TreeNodeKind kind = tree_node_get_kind(node);
+
+    switch (kind) {
+        case TREE_NODE_PROGRAMA:
+            build_instructions(file, tree_node_get_left(node), scopes, strings);
+            break;
+
+        case TREE_NODE_DECL_PROGRAMA:
+            build_instructions(file, tree_node_get_left(node), scopes, strings);
+            break;
+
+        case TREE_NODE_BLOCO:
+            {
+                build_instructions(file, tree_node_get_left(node), scopes, strings);
+            }
+            break;
+
+        case TREE_NODE_VAR_SECTION_BLOCO:
+            {
+                scopes = symbol_scope_push_scope(scopes);
+                build_instructions(file, tree_node_get_right(node), scopes, strings);
+
+                int size = symbol_scope_get_size(scopes);
+                emit(file, "addiu $sp, $sp, %d\n", -4*size);
+
+                build_instructions(file, tree_node_get_left(node), scopes, strings);
+                scopes = symbol_scope_pop_scope(scopes);
+            }
+            break;
+
+        case TREE_NODE_VAR_SECTION:
+            {
+                build_instructions(file, tree_node_get_left(node), scopes, strings);
+            }
+            break;
+
+        case TREE_NODE_LISTA_DECL_VAR:
+            {
+                build_instructions(file, tree_node_get_left(node), scopes, strings);
+                build_instructions(file, tree_node_get_right(node), scopes, strings);
+            }
+            break;
+
+        case TREE_NODE_DECL_VAR:
+            {
+                TreeNodeDataType type = tree_node_get_data_type(node);
+
+                while (node != NULL) {
+                    const char* name = tree_node_get_lexeme(node);
+
+                    if (type == TREE_NODE_INTEGER) {
+                        symbol_scope_add_symbol(scopes, name, SYMBOL_INTEGER);
+                    }
+                    else if (type == TREE_NODE_CHARACTER) {
+                        symbol_scope_add_symbol(scopes, name, SYMBOL_CHARACTER);
+                    }
+
+                    tree_node_set_type(node, type);
+                    node = tree_node_get_left(node);
+                }
+            }
+            break;
+
+        case TREE_NODE_INT:
+            break;
+
+        case TREE_NODE_CAR:
+            break;
+
+        case TREE_NODE_LISTA_COMANDO:
+            {
+                build_instructions(file, tree_node_get_left(node), scopes, strings);
+                build_instructions(file, tree_node_get_right(node), scopes, strings);
+            }
+            break;
+
+        case TREE_NODE_COMANDO:
+            break;
+
+        case TREE_NODE_LEIA:
+            {
+                SymbolEntry* symbol = symbol_scope_get_symbol(scopes, tree_node_get_lexeme(node), true);
+                SymbolDataType type = symbol_entry_get_data_type(symbol);
+                int position = symbol_entry_get_position(symbol);
+
+                if (type == SYMBOL_INTEGER) {
+                    emit(file, "li $v0, 5");
+                    emit(file, "syscall");
+                    emit(file, "li $v0 %d($fp)\n", -4*position);
+                }
+                else if (type == SYMBOL_CHARACTER) {
+                    emit(file, "lub $v0, 12");
+                    emit(file, "syscall");
+                    emit(file, "lub $v0 %d($fp)\n", -4*position);
+                }
+            }
+            break;
+
+        case TREE_NODE_ESCREVA_EXPRESSAO:
+            {
+                TreeNode* expression = tree_node_get_left(node);
+                build_instructions(file, expression, scopes, strings);
+
+                TreeNodeDataType type = tree_node_get_data_type(expression);
+
+                if (type == TREE_NODE_INTEGER) {
+                    emit(file, "li $v0, 1");
+                    emit(file, "li $a0, %d", tree_node_get_lexeme(node));
+                    emit(file, "syscall\n");
+                }
+                else if (type == TREE_NODE_CHARACTER) {
+                    emit(file, "li $v0, 11");
+                    emit(file, "li $a0, %d", tree_node_get_lexeme(node));
+                    emit(file, "syscall\n");
+                }
+            }
+            break;
+
+        case TREE_NODE_ESCREVA_CADEIACARACTERES:
+            {
+                int index = strings_get_index(strings, tree_node_get_lexeme(node));
+
+                emit(file, "li $v0, 4");
+                emit(file, "la $a0, string_%d", index);
+                emit(file, "syscall\n");
+            }
+            break;
+
+        case TREE_NODE_NOVALINHA:
+            {
+                emit(file, "li $v0, 11");
+                emit(file, "la $a0, '\\n'");
+                emit(file, "syscall\n");
+            }
+            break;
+
+        case TREE_NODE_SE_ENTAO:
+            {
+                build_instructions(file, tree_node_get_left(node), scopes, strings);
+
+                int index = get_index();
+
+                emit(file, "li $t1, 1");
+                emit(file, "bne $s0, $t1, fimse_%d\n", index);
+
+                build_instructions(file, tree_node_get_right(node), scopes, strings);
+
+                emitb(file, "fimse_%d:", index);
+            }
+            break;
+
+        case TREE_NODE_SE_ENTAO_SENAO:
+            {
+                build_instructions(file, tree_node_get_left(node), scopes, strings);
+                build_instructions(file, tree_node_get_right(node), scopes, strings);
+            }
+            break;
+
+        case TREE_NODE_ENTAO_SENAO:
+            {
+                int index = get_index();
+
+                emit(file, "li $t1, 1");
+                emit(file, "bne $s0, $t1, senao_%d\n", index);
+
+                build_instructions(file, tree_node_get_left(node), scopes, strings);
+
+                emit(file, "j fimse_%d\n", index);
+                emitb(file, "senao_%d:", index);
+
+                build_instructions(file, tree_node_get_right(node), scopes, strings);
+
+                emitb(file, "fimse_%d:", index);
+            }
+            break;
+
+        case TREE_NODE_ENQUANTO:
+            {
+            }
+            break;
+        
+        case TREE_NODE_ASSIGN_EXPR:
+            {
+                build_instructions(file, tree_node_get_left(node), scopes, strings);
+                
+                SymbolEntry* symbol = symbol_scope_get_symbol(scopes, tree_node_get_lexeme(node), true);
+                SymbolDataType type = symbol_entry_get_data_type(symbol);
+                int position = symbol_entry_get_position(symbol);
+                
+                if (type == SYMBOL_INTEGER) {
+                    emit(file, "li $s0 %d($fp)\n", -4*position);
+                }
+                else if (type == SYMBOL_CHARACTER) {
+                    emit(file, "lbu $s0 %d($fp)\n", -4*position);
+                }
+            }
+            break;
+
+        case TREE_NODE_OR_EXPR:
+            {
+                build_instructions(file, tree_node_get_left(node), scopes, strings);
+                emit(file, "sw $s0, 0($sp)");
+                emit(file, "addiu $sp, $sp, -1");
+                
+                build_instructions(file, tree_node_get_right(node), scopes, strings);
+                emit(file, "lw $t1, 4($sp)");
+                emit(file, "addiu $sp, $sp, 4");
+                
+                emit(file, "or $s0, $s0, $t1\n");
+            }
+            break;
+
+        case TREE_NODE_AND_EXPR:
+            {
+                build_instructions(file, tree_node_get_left(node), scopes, strings);
+                emit(file, "sw $s0, 0($sp)");
+                emit(file, "addiu $sp, $sp, -1");
+                
+                build_instructions(file, tree_node_get_right(node), scopes, strings);
+                emit(file, "lw $t1, 4($sp)");
+                emit(file, "addiu $sp, $sp, 4");
+
+                emit(file, "and $s0, $s0, $t1\n");
+            }
+            break;
+
+        case TREE_NODE_EQ_EXPR:
+            {
+                build_instructions(file, tree_node_get_left(node), scopes, strings);
+                emit(file, "sw $s0, 0($sp)");
+                emit(file, "addiu $sp, $sp, -1");
+                
+                build_instructions(file, tree_node_get_right(node), scopes, strings);
+                emit(file, "lw $t1, 4($sp)");
+                emit(file, "addiu $sp, $sp, 4");
+
+                emit(file, "seq $s0, $s0, $t1\n");
+            }
+            break;
+
+        case TREE_NODE_NEQ_EXPR:
+            {
+                build_instructions(file, tree_node_get_left(node), scopes, strings);
+                emit(file, "sw $s0, 0($sp)");
+                emit(file, "addiu $sp, $sp, -1");
+                
+                build_instructions(file, tree_node_get_right(node), scopes, strings);
+                emit(file, "lw $t1, 4($sp)");
+                emit(file, "addiu $sp, $sp, 4");
+
+                emit(file, "sne $s0, $s0, $t1\n");
+            }
+            break;
+
+        case TREE_NODE_LE_EXPR:
+            {
+                build_instructions(file, tree_node_get_left(node), scopes, strings);
+                emit(file, "sw $s0, 0($sp)");
+                emit(file, "addiu $sp, $sp, -1");
+                
+                build_instructions(file, tree_node_get_right(node), scopes, strings);
+                emit(file, "lw $t1, 4($sp)");
+                emit(file, "addiu $sp, $sp, 4");
+
+                emit(file, "slt $s0, $s0, $t1\n");
+            }
+            break;
+
+        case TREE_NODE_GE_EXPR:
+            {
+                build_instructions(file, tree_node_get_left(node), scopes, strings);
+                emit(file, "sw $s0, 0($sp)");
+                emit(file, "addiu $sp, $sp, -1");
+                
+                build_instructions(file, tree_node_get_right(node), scopes, strings);
+                emit(file, "lw $t1, 4($sp)");
+                emit(file, "addiu $sp, $sp, 4");
+
+                emit(file, "sgt $s0, $s0, $t1\n");
+            }
+            break;
+            
+        case TREE_NODE_LEQ_EXPR:
+            {
+                build_instructions(file, tree_node_get_left(node), scopes, strings);
+                emit(file, "sw $s0, 0($sp)");
+                emit(file, "addiu $sp, $sp, -1");
+                
+                build_instructions(file, tree_node_get_right(node), scopes, strings);
+                emit(file, "lw $t1, 4($sp)");
+                emit(file, "addiu $sp, $sp, 4");
+
+                emit(file, "sle $s0, $s0, $t1\n");
+            }
+            break;
+
+        case TREE_NODE_GEQ_EXPR:
+            {
+                build_instructions(file, tree_node_get_left(node), scopes, strings);
+                emit(file, "sw $s0, 0($sp)");
+                emit(file, "addiu $sp, $sp, -1");
+                
+                build_instructions(file, tree_node_get_right(node), scopes, strings);
+                emit(file, "lw $t1, 4($sp)");
+                emit(file, "addiu $sp, $sp, 4");
+
+                emit(file, "sge $s0, $s0, $t1\n");
+            }
+            break;
+
+        case TREE_NODE_ADD_EXPR:
+            {
+                build_instructions(file, tree_node_get_left(node), scopes, strings);
+                emit(file, "sw $s0, 0($sp)");
+                emit(file, "addiu $sp, $sp, -1");
+                
+                build_instructions(file, tree_node_get_right(node), scopes, strings);
+                emit(file, "lw $t1, 4($sp)");
+                emit(file, "addiu $sp, $sp, 4");
+
+                emit(file, "add $s0, $s0, $t1\n");
+            }
+            break;
+
+        case TREE_NODE_SUB_EXPR:
+            {
+                build_instructions(file, tree_node_get_left(node), scopes, strings);
+                emit(file, "sw $s0, 0($sp)");
+                emit(file, "addiu $sp, $sp, -1");
+                
+                build_instructions(file, tree_node_get_right(node), scopes, strings);
+                emit(file, "lw $t1, 4($sp)");
+                emit(file, "addiu $sp, $sp, 4");
+
+                emit(file, "sub $s0, $s0, $t1\n");
+            }
+            break;
+
+        case TREE_NODE_MUL_EXPR:
+            {
+                build_instructions(file, tree_node_get_left(node), scopes, strings);
+                emit(file, "sw $s0, 0($sp)");
+                emit(file, "addiu $sp, $sp, -1");
+                
+                build_instructions(file, tree_node_get_right(node), scopes, strings);
+                emit(file, "lw $t1, 4($sp)");
+                emit(file, "addiu $sp, $sp, 4");
+
+                emit(file, "mul $s0, $s0, $t1\n");
+            }
+            break;
+
+        case TREE_NODE_DIV_EXPR:
+            {
+                build_instructions(file, tree_node_get_left(node), scopes, strings);
+                emit(file, "sw $s0, 0($sp)");
+                emit(file, "addiu $sp, $sp, -1");
+                
+                build_instructions(file, tree_node_get_right(node), scopes, strings);
+                emit(file, "lw $t1, 4($sp)");
+                emit(file, "addiu $sp, $sp, 4");
+
+                emit(file, "div $s0, $s0, $t1\n");
+            }
+            break;
+
+        case TREE_NODE_MINUS_EXPR:
+            {
+                build_instructions(file, tree_node_get_left(node), scopes, strings);
+                emit(file, "neg $s0, $s0, $t1\n");
+            }
+            break;
+
+        case TREE_NODE_NEG_EXPR:
+            {
+                build_instructions(file, tree_node_get_left(node), scopes, strings);
+                emit(file, "seq $s0, $s0, 0\n");
+            }
+            break;
+
+        case TREE_NODE_IDENTIFICADOR:
+            {
+                SymbolEntry* symbol = symbol_scope_get_symbol(scopes, tree_node_get_lexeme(node), true);
+                SymbolDataType type = symbol_entry_get_data_type(symbol);
+                int position = symbol_entry_get_position(symbol);
+
+                if (type == SYMBOL_INTEGER) {
+                    emit(file, "li $s0 %d($fp)\n", -4*position);
+                }
+                else if (type == SYMBOL_CHARACTER) {
+                    emit(file, "lbu $s0 %d($fp)\n", -4*position);
+                }
+            }
+
+            break;
+
+        case TREE_NODE_CARCONST:
+            {
+                emit(file, "lbu $s0 '%s'\n", tree_node_get_lexeme(node));
+            }
+            break;
+
+        case TREE_NODE_INTCONST:
+            {
+                emit(file, "li $s0 %s\n", tree_node_get_lexeme(node));
+            }
+            break;
+
+        case TREE_NODE_NOKIND:
+            break;
+
+        default:
+            break;
+    }
+}
+
 /**
  * @brief Generate code with all instructions of the code
  * 
@@ -257,7 +679,9 @@ Strings* generate_strings(FILE* file, TreeNode* node) {
  * @param strings Strings list with all strings in the code
  */
 void generate_instructions(FILE* file, TreeNode* node, Strings* strings) {
-
+    SymbolScope* scopes = symbol_scope_create();
+    build_instructions(file, node, scopes, strings);
+    symbol_scope_delete(scopes);
 }
 
 /**
@@ -280,6 +704,8 @@ void generate_code(TreeNode* tree) {
     emitb(file, ".text");
     emitb(file, ".globl main\n");
     emitb(file, "main:");
+
+    emit(file, "move $fp, $sp");
 
     generate_instructions(file, tree, strings);
 
