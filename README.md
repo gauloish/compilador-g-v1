@@ -13,15 +13,11 @@ Nosso grupo é composto por:
 
 Para a execução do projeto é necessário ter os seguintes utilitários e suas respectivas versões:
 
-**GCC:** 15.2.1
-
-**Make:** 4.4.1
-
-**Flex:** 2.6.4
-
-**Bison:** 3.8.2
-
-**Spim:** ?
+- **GCC:** 15.2.1
+- **Make:** 4.4.1
+- **Flex:** 2.6.4
+- **Bison:** 3.8.2
+- **Spim:** ?
 
 Talvez seja possível compilar o projeto com versões diferentes desses utilitários, mas isso não foi testado. As versões sugeridas foram as que nós usamos no projeto.
 
