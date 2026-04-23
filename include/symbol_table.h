@@ -21,6 +21,7 @@ void symbol_table_delete(SymbolTable*);
 void symbol_table_add_symbol(SymbolTable*, const char*, SymbolDataType, int, int);
 bool symbol_table_check_symbol(SymbolTable*, const char*);
 SymbolEntry* symbol_table_get_symbol(SymbolTable*, const char*);
+int symbol_table_get_size(SymbolTable*);
 
 SymbolScope* symbol_scope_create(void);
 void symbol_scope_delete(SymbolScope*);
@@ -29,6 +30,7 @@ SymbolScope* symbol_scope_pop_scope(SymbolScope*);
 void symbol_scope_add_symbol(SymbolScope*, const char*, SymbolDataType);
 bool symbol_scope_check_symbol(SymbolScope*, const char*, bool);
 SymbolEntry* symbol_scope_get_symbol(SymbolScope*, const char*, bool);
+int symbol_scope_get_size(SymbolScope*);
 
 enum _SymbolDataType {
     SYMBOL_INTEGER,

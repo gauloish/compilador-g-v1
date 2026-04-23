@@ -24,6 +24,7 @@ struct _SymbolEntry {
  *
  */
 struct _SymbolTable {
+    int size;
     SymbolEntry* table[TABLE_SIZE];
 };
 
@@ -128,6 +129,8 @@ SymbolTable* symbol_table_create(void) {
         symbol_table->table[i] = NULL;
     }
 
+    symbol_table->size = 0;
+
     return symbol_table;
 }
 
@@ -190,6 +193,7 @@ void symbol_table_add_symbol(SymbolTable* symbol_table, const char* name, Symbol
 
     symbol->next = symbol_table->table[i];
     symbol_table->table[i] = symbol;
+    symbol_table->size++;
 }
 
 /**
@@ -224,7 +228,7 @@ bool symbol_table_check_symbol(SymbolTable* symbol_table, const char* name) {
  * @param name Name of the symbol
  * @return SymbolEntry* Symbol entry object
  */
-SymbolEntry* symbol_table_get_data_type(SymbolTable* symbol_table, const char* name) {
+SymbolEntry* symbol_table_get_symbol(SymbolTable* symbol_table, const char* name) {
     if (symbol_table == NULL || name == NULL) {
         return NULL;
     }
@@ -239,6 +243,20 @@ SymbolEntry* symbol_table_get_data_type(SymbolTable* symbol_table, const char* n
     }
 
     return NULL;
+}
+
+/**
+ * @brief Get symbol table size
+ * 
+ * @param symbol_table Symbol table
+ * @return int Symbol table size
+ */
+int symbol_table_get_size(SymbolTable* symbol_table) {
+    if (symbol_table == NULL) {
+        return 0;
+    }
+
+    return symbol_table->size;
 }
 
 // -------------------- Symbol Scope -------------------- //
@@ -391,4 +409,18 @@ SymbolEntry* symbol_scope_get_symbol(SymbolScope* symbol_scope, const char* name
     }
 
     return NULL;
+}
+
+/**
+ * @brief Get the symbol table size of the current scope
+ * 
+ * @param symbol_scope Symbol scope stack
+ * @return int Size of the symbol table of the current scope
+ */
+int symbol_scope_get_size(SymbolScope* symbol_scope) {
+    if (symbol_scope == NULL) {
+        return 0;
+    }
+
+    return symbol_table_get_size(symbol_scope->symbol_table);
 }
