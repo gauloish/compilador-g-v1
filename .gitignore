@@ -2,5 +2,6 @@ include/tokens.h
 objects/*
 source/lexer.c
 source/parser.c
+assembly.s
 g-v1.exe
 g-v1
