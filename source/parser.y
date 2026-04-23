@@ -77,7 +77,7 @@ Programa: DeclPrograma {
         );
 
         semantic_analysis(tree);
-        generate_code(tree);
+        // generate_code(tree);
     };
 
 DeclPrograma: PRINCIPAL Bloco {
