@@ -14,12 +14,20 @@ extern int yyparse();
 extern void yyerror(char const *);
 extern int analysis_error;
 
+char* output_file = NULL;
+
 int main(int argc, char** argv){
     begin_memory();
 
-    if (argc != 2) {
+    if (argc == 2) {
+        output_file = "assembly.s";
+    }
+    else if (argc == 3) {
+        output_file = argv[2];
+    }
+    else {
         analysis_error = false;
-        yyerror("Uso correto \"./gv1 nome_arquivo\"!!!");
+        yyerror("Uso correto \"./gv1 <entrada> <saida>\"!!!");
     }
 
     yyin = fopen(argv[1], "r");
