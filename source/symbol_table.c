@@ -84,6 +84,20 @@ SymbolDataType symbol_entry_get_data_type(SymbolEntry* symbol) {
 }
 
 /**
+ * @brief Get symbol name
+ * 
+ * @param symbol Symbol
+ * @return const char* Name of the symbol
+ */
+const char* symbol_entry_get_name(SymbolEntry* symbol) {
+    if (symbol == NULL) {
+        return NULL;
+    }
+
+    return symbol->name;
+}
+
+/**
  * @brief Get symbol position
  * 
  * @param symbol Symbol
@@ -197,6 +211,8 @@ bool symbol_table_check_symbol(SymbolTable* symbol_table, const char* name) {
         if (strcmp(name, symbol->name) == 0) {
             return true;
         }
+
+        symbol = symbol->next;
     }
 
     return false;
@@ -221,6 +237,8 @@ SymbolEntry* symbol_table_get_symbol(SymbolTable* symbol_table, const char* name
         if (strcmp(name, symbol->name) == 0) {
             return symbol;
         }
+
+        symbol = symbol->next;
     }
 
     return NULL;
