@@ -9,16 +9,15 @@ typedef struct _SymbolEntry SymbolEntry;
 typedef struct _SymbolTable SymbolTable;
 typedef struct _SymbolScope SymbolScope;
 
-SymbolEntry* symbol_entry_create(const char*, SymbolDataType, int, int);
+SymbolEntry* symbol_entry_create(const char*, SymbolDataType, int);
 void symbol_entry_delete(SymbolEntry*);
 const char* symbol_entry_get_name(SymbolEntry*);
 SymbolDataType symbol_entry_get_data_type(SymbolEntry*);
-int symbol_entry_get_level(SymbolEntry*);
 int symbol_entry_get_position(SymbolEntry*);
 
 SymbolTable* symbol_table_create(void);
 void symbol_table_delete(SymbolTable*);
-void symbol_table_add_symbol(SymbolTable*, const char*, SymbolDataType, int, int);
+void symbol_table_add_symbol(SymbolTable*, const char*, SymbolDataType, int);
 bool symbol_table_check_symbol(SymbolTable*, const char*);
 SymbolEntry* symbol_table_get_symbol(SymbolTable*, const char*);
 int symbol_table_get_size(SymbolTable*);

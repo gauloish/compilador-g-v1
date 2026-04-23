@@ -15,7 +15,6 @@ struct _SymbolEntry {
     const char* name;
     SymbolDataType type;
     SymbolEntry* next;
-    int level;
     int position;
 };
 
@@ -24,8 +23,8 @@ struct _SymbolEntry {
  *
  */
 struct _SymbolTable {
-    int size;
     SymbolEntry* table[TABLE_SIZE];
+    int size;
 };
 
 /**
@@ -35,7 +34,6 @@ struct _SymbolTable {
 struct _SymbolScope {
     SymbolTable* symbol_table;
     SymbolScope* next;
-    int level;
     int position;
 };
 
@@ -46,17 +44,15 @@ struct _SymbolScope {
  * 
  * @param name Symbol name
  * @param type Symbol type (integer or character)
- * @param level Scope level of symbol
  * @param position Position in relation the first symbol
  * @return SymbolEntry* New symbol entry
  */
-SymbolEntry* symbol_entry_create(const char* name, SymbolDataType type, int level, int position) {
+SymbolEntry* symbol_entry_create(const char* name, SymbolDataType type, int position) {
     SymbolEntry* symbol = (SymbolEntry*) allocate_memory(sizeof(SymbolEntry));
 
     *symbol = (SymbolEntry){
         .name = name,
         .type = type,
-        .level = level,
         .position = position,
         .next = NULL,
     };
@@ -85,20 +81,6 @@ SymbolDataType symbol_entry_get_data_type(SymbolEntry* symbol) {
     }
 
     return symbol->type;
-}
-
-/**
- * @brief Get symbol scope level
- * 
- * @param symbol Symbol
- * @return int Scope level of the symbol
- */
-int symbol_entry_get_level(SymbolEntry* symbol) {
-    if (symbol == NULL) {
-        return 0;
-    }
-
-    return symbol->level;
 }
 
 /**
@@ -180,15 +162,14 @@ int compute_hash(const char* string) {
  * @param symbol_table Symbol table where symbol will be added
  * @param name Name of the symbol
  * @param type Data type of the symbol
- * @param level Scope level of symbol
  * @param position Position in relation the first symbol
  */
-void symbol_table_add_symbol(SymbolTable* symbol_table, const char* name, SymbolDataType type, int level, int position) {
+void symbol_table_add_symbol(SymbolTable* symbol_table, const char* name, SymbolDataType type, int position) {
     if (symbol_table == NULL) {
         return;
     }
 
-    SymbolEntry* symbol = symbol_entry_create(name, type, level, position);
+    SymbolEntry* symbol = symbol_entry_create(name, type, position);
     int i = compute_hash(name);
 
     symbol->next = symbol_table->table[i];
@@ -272,7 +253,6 @@ SymbolScope* symbol_scope_create(void) {
     *symbol_scope = (SymbolScope){
         .symbol_table = NULL,
         .next = NULL,
-        .level = 0,
         .position = 0,
     };
 
@@ -307,7 +287,6 @@ SymbolScope* symbol_scope_push_scope(SymbolScope* symbol_scope) {
 
     new_symbol_scope->symbol_table = symbol_table;
     new_symbol_scope->next = symbol_scope;
-    new_symbol_scope->level = symbol_scope->level + 1;
     new_symbol_scope->position = symbol_scope->position;
 
     return new_symbol_scope;
@@ -345,7 +324,7 @@ void symbol_scope_add_symbol(SymbolScope* symbol_scope, const char* name, Symbol
 
     symbol_scope->position++;
 
-    symbol_table_add_symbol(symbol_scope->symbol_table, name, type, symbol_scope->level, symbol_scope->position);
+    symbol_table_add_symbol(symbol_scope->symbol_table, name, type, symbol_scope->position);
 }
 
 /**
