@@ -56,10 +56,7 @@ void traverse_tree(TreeNode* node, SymbolScope* scopes) {
 
         case TREE_NODE_BLOCO:
             {
-                // TODO: Check if should remove this scopes
-                // scopes = symbol_scope_push_scope(scopes);
                 traverse_tree(tree_node_get_left(node), scopes);
-                // scopes = symbol_scope_pop_scope(scopes);
             }
             break;
 
