@@ -28,7 +28,7 @@ SymbolScope* symbol_scope_push_scope(SymbolScope*);
 SymbolScope* symbol_scope_pop_scope(SymbolScope*);
 void symbol_scope_add_symbol(SymbolScope*, const char*, SymbolDataType);
 bool symbol_scope_check_symbol(SymbolScope*, const char*, bool);
-SymbolEntry* symbol_scope_get_symbol(SymbolTable*, const char*, bool);
+SymbolEntry* symbol_scope_get_symbol(SymbolScope*, const char*, bool);
 
 enum _SymbolDataType {
     SYMBOL_INTEGER,
