@@ -11,6 +11,7 @@
 
 extern void yyerror(const char*);
 extern bool analysis_error;
+extern char* output_file;
 
 typedef struct _Strings Strings;
 
@@ -346,7 +347,7 @@ void build_instructions(FILE* file, TreeNode* node, SymbolScope* scopes, Strings
 
         case TREE_NODE_LEIA:
             {
-                SymbolEntry* symbol = symbol_scope_get_symbol(scopes, tree_node_get_lexeme(node), true);
+                SymbolEntry* symbol = symbol_scope_get_symbol(scopes, tree_node_get_lexeme(node), false);
                 SymbolDataType type = symbol_entry_get_data_type(symbol);
                 int position = symbol_entry_get_position(symbol);
 
@@ -462,10 +463,10 @@ void build_instructions(FILE* file, TreeNode* node, SymbolScope* scopes, Strings
             {
                 build_instructions(file, tree_node_get_left(node), scopes, strings);
                 
-                SymbolEntry* symbol = symbol_scope_get_symbol(scopes, tree_node_get_lexeme(node), true);
+                SymbolEntry* symbol = symbol_scope_get_symbol(scopes, tree_node_get_lexeme(node), false);
                 SymbolDataType type = symbol_entry_get_data_type(symbol);
                 int position = symbol_entry_get_position(symbol);
-                
+
                 if (type == SYMBOL_INTEGER) {
                     emit(file, "sw $s0, %d($fp)\n", -4*position);
                 }
@@ -659,24 +660,26 @@ void build_instructions(FILE* file, TreeNode* node, SymbolScope* scopes, Strings
 
         case TREE_NODE_IDENTIFICADOR:
             {
-                SymbolEntry* symbol = symbol_scope_get_symbol(scopes, tree_node_get_lexeme(node), true);
+                SymbolEntry* symbol = symbol_scope_get_symbol(scopes, tree_node_get_lexeme(node), false);
                 SymbolDataType type = symbol_entry_get_data_type(symbol);
                 int position = symbol_entry_get_position(symbol);
+
+                // printf("variable = %s, offset = %d\n", symbol_entry_get_name(symbol), 4*position);
 
                 if (type == SYMBOL_INTEGER) {
                     emit(file, "lw $s0, %d($fp)\n", -4*position);
 
                     // TODO: remove
-                    emit(file, "li $v0, 1");
-                    emit(file, "lw $a0, %d($fp)", -4*position);
-                    emit(file, "syscall\n");
+                    // emit(file, "li $v0, 1");
+                    // emit(file, "lw $a0, %d($fp)", -4*position);
+                    // emit(file, "syscall\n");
                 }
                 else if (type == SYMBOL_CHARACTER) {
                     emit(file, "lb $s0, %d($fp)\n", -4*position);
 
-                    emit(file, "li $v0, 11");
-                    emit(file, "lw $a0, %d($fp)", -4*position);
-                    emit(file, "syscall\n");
+                    // emit(file, "li $v0, 11");
+                    // emit(file, "lw $a0, %d($fp)", -4*position);
+                    // emit(file, "syscall\n");
                 }
             }
 
@@ -721,7 +724,7 @@ void generate_instructions(FILE* file, TreeNode* node, Strings* strings) {
  * @param tree Abstract Syntax Tree where code will be generated from
  */
 void generate_code(TreeNode* tree) {
-    FILE* file = fopen("assembly.s", "w");
+    FILE* file = fopen(output_file, "w");
 
     if (file == NULL) {
         analysis_error = false;
