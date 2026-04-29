@@ -397,7 +397,7 @@ void build_instructions(FILE* file, TreeNode* node, SymbolScope* scopes, Strings
         case TREE_NODE_NOVALINHA:
             {
                 emit(file, "li $v0, 11");
-                emit(file, "li $a0, '\\n'");
+                emit(file, "li $a0, 10");
                 emit(file, "syscall\n");
             }
             break;
@@ -676,7 +676,7 @@ void build_instructions(FILE* file, TreeNode* node, SymbolScope* scopes, Strings
 
         case TREE_NODE_CARCONST:
             {
-                emit(file, "li $s0, '%s'\n", tree_node_get_lexeme(node));
+                emit(file, "li $s0, '%s\n", tree_node_get_lexeme(node));
             }
             break;
 
