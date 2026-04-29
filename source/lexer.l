@@ -48,7 +48,7 @@ ID [[:alpha:]_][[:alnum:]_]*
     [^\*]* ;
     "*"+[^/] ;
     <<EOF>> {
-        yyerror("Cometário não termina");
+        yyerror("Comentário não termina");
     }
     "*"+"/" BEGIN(INITIAL);
 }
