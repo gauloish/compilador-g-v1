@@ -7,13 +7,13 @@ da razao. Em seguida computa e imprime a soma dos elementos da progresao */
 		nota: int;
 	}
 	{
-		escreva "Digite um valor inteiro para a nota de um aluno";
+		escreva "Digite um \" valor inteiro para a nota de um aluno";
 		novalinha;
 		leia nota;
 		se (nota<6)
 		entao
 		{
-			conceito@: car;
+			conceito: car;
 		}
 		{	
 			conceito='D';

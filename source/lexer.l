@@ -69,7 +69,6 @@ ID [[:alpha:]_][[:alnum:]_]*
     [\n] {
         yyerror("Cadeia de caracteres ocupa mais de uma linha");
     }
-    . ;
 }
 
 '([^\'\\]|\\.)' {
@@ -171,12 +170,6 @@ char* copy_substring(const char* string, bool escape, int left, int right) {
                     break;
                 case '\\':
                     copy[i] = '\\';
-                    break;
-                case '\"':
-                    copy[i] = '\"';
-                    break;
-                case '\'':
-                    copy[i] = '\'';
                     break;
                 default:
                     copy[i] = string[j];
