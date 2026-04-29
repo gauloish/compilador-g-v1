@@ -21,8 +21,6 @@ void report_semantic_error(const char* message, TreeNode* node) {
     int column = tree_node_get_column(node);
 
     fprintf(stderr, "ERRO: %s - LINHA: %d, COLUNA: %d\n", message, line, column);
-
-    end_memory();
     exit(EXIT_FAILURE);
 }
 

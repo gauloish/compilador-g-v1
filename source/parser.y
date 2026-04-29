@@ -574,8 +574,6 @@ PrimExpr: IDENTIFICADOR {
  * @param error Error to be printed
  */
 void yyerror(const char *error) {
-    end_memory();
-
     if (analysis_error) {
         fprintf(stderr, "ERRO: %s - LINHA: %d, COLUNA: %d\n", error, yylloc.first_line, yylloc.first_column);
     }

@@ -17,8 +17,6 @@ extern int analysis_error;
 char* output_file = NULL;
 
 int main(int argc, char** argv){
-    begin_memory();
-
     if (argc == 2) {
         output_file = "assembly.s";
     }
@@ -41,6 +39,4 @@ int main(int argc, char** argv){
 
     yyparse();
     fclose(yyin);
-    
-    end_memory();
 }
