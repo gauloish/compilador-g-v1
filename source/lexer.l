@@ -9,9 +9,10 @@
 #include "../include/memory.h"
 
 extern void yyerror(const char*);
+extern int yyleng;
 extern bool analysis_error;
 
-char* copy_substring(const char*, bool, int, int);
+char* copy_substring(const char*, int, int, bool);
 
 #define YY_USER_ACTION                        \
     yylloc.first_line = yylloc.last_line;     \
@@ -59,7 +60,7 @@ ID [[:alpha:]_][[:alnum:]_]*
 
 <cadeiacaracteres>{
     ([^\\\"\n]|\\.)*\" {
-        yylval.lexeme = copy_substring(yytext, true, 0, strlen(yytext) - 2);
+        yylval.lexeme = copy_substring(yytext, 0, strlen(yytext) - 2, false);
         BEGIN(INITIAL);
         return CADEIACARACTERES;
     }
@@ -69,11 +70,18 @@ ID [[:alpha:]_][[:alnum:]_]*
     [\n] {
         yyerror("Cadeia de caracteres ocupa mais de uma linha");
     }
+    . {
+        yyerror("Caractere inválido");
+    }
 }
 
-'([^\'\\]|\\.)' {
-    yylval.lexeme = copy_substring(yytext, true, 1, strlen(yytext) - 2);
+'([^\\\'\n]|\\.)' {
+    yylval.lexeme = copy_substring(yytext, 1, strlen(yytext) - 2, true);
     return CARCONST;
+}
+
+'' {
+    yyerror("Caractere deve conter pelo menos um símbolo");
 }
 
 '.*' {
@@ -114,12 +122,12 @@ ID [[:alpha:]_][[:alnum:]_]*
 "enquanto"  {return ENQUANTO;}
 
 {DIGIT}+ {
-    yylval.lexeme = copy_substring(yytext, false, 0, strlen(yytext) - 1);
+    yylval.lexeme = copy_substring(yytext, 0, strlen(yytext) - 1, false);
     return INTCONST;
 }
 
 {ID} {
-    yylval.lexeme = copy_substring(yytext, false, 0, strlen(yytext) - 1);
+    yylval.lexeme = copy_substring(yytext, 0, strlen(yytext) - 1, false);
     return IDENTIFICADOR;
 }
 
@@ -137,49 +145,59 @@ ID [[:alpha:]_][[:alnum:]_]*
  * @brief Copy a substring of a string
  * 
  * @param string String to be copied
- * @param escape If true, process the escape characters.
  * @param left Initial position in string to be copied (begin of substring)
  * @param right Final position in string to be copied (end of substring)
+ * @param escape If true, process escape characters. Else, does not process.
  * @return char* The substring of string copied in new allocated memory block
  */
-char* copy_substring(const char* string, bool escape, int left, int right) {
-    int lenght = strlen(string);
-    char* copy = (char*)allocate_memory(lenght + 1);
+char* copy_substring(const char* string, int left, int right, bool escape) {
+    int length = strlen(string);
+    char* copy = (char*)allocate_memory(length + 1);
 
-    for (int i = 0; i <= lenght; i++) {
+    for (int i = 0; i <= length; i++) {
         copy[i] = '\0';
     }
 
-    for (int i = 0, j = left; j <= right && i <= lenght; i++, j++) {
-        if (yytext[j] == '\\' && j + 1 <= right) {
-            switch (yytext[j + 1]) {
-                case '0':
-                    copy[i] = '\0';
-                    break;
-                case 'n':
-                    copy[i] = '\n';
-                    break;
-                case 't':
-                    copy[i] = '\t';
-                    break;
-                case 'r':
-                    copy[i] = '\r';
-                    break;
-                case 'b':
-                    copy[i] = '\b';
-                    break;
-                case '\\':
-                    copy[i] = '\\';
-                    break;
-                default:
-                    copy[i] = string[j];
-                    continue;
-            }
+    if (escape) {
+        for (int i = 0, j = left; i < length && j <= right; i++, j++) {
+            if (string[j] == '\\' && j + 1 <= right) {
+                switch (string[j + 1]) {
+                    case 'a':
+                        copy[i] = '\a';
+                        break;
+                    case 'b':
+                        copy[i] = '\b';
+                        break;
+                    case 'f':
+                        copy[i] = '\f';
+                        break;
+                    case 'n':
+                        copy[i] = '\n';
+                        break;
+                    case 'r':
+                        copy[i] = '\r';
+                        break;
+                    case 't':
+                        copy[i] = '\t';
+                        break;
+                    case 'v':
+                        copy[i] = '\v';
+                        break;
+                    default:
+                        copy[i] = string[j + 1];
+                        continue;
+                }
 
-            j++;
+                j++;
+            }
+            else {
+                copy[i] = string[j];
+            }
         }
-        else {
-            copy[i] = yytext[j];
+    }
+    else {
+        for (int i = 0, j = left; i < length && j <= right; i++, j++) {
+            copy[i] = string[j];
         }
     }
 

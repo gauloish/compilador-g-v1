@@ -31,7 +31,7 @@ valor da razao da progressao.*/
 		escreva "O valor do elemento ";
 		escreva n;
 		escreva " da progressao e: ";
-		escreva an;
+		escreva a1;
 		novalinha;
 	}
 	 
