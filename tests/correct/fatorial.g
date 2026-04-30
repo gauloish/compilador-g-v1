@@ -11,7 +11,7 @@ o programa computa e emite o valor do fatorial desse numero.  */
 		n=-1;
 		enquanto (n<=0)
 			{
-				escreva "Digite um numero inteiro nao negativo";
+				escreva "Digite um numero inteiro nao \" negativo";
 				novalinha;
 				leia n;
 			}

@@ -197,7 +197,22 @@ char* copy_substring(const char* string, int left, int right, bool escape) {
     }
     else {
         for (int i = 0, j = left; i < length && j <= right; i++, j++) {
-            copy[i] = string[j];
+            if (string[j] == '\\' && j + 1 <= right) {
+                char c = string[j + 1];
+
+                if (c == 'a' || c == 'b' || c == 'f' ||
+                    c == 'n' || c == 'r' || c == 't' ||
+                    c == 'v' || c == '\'' || c == '\"') {
+                    copy[i] = string[j];
+                }
+                else {
+                    copy[i] = c;
+                    j++;
+                }
+            }
+            else {
+                copy[i] = string[j];
+            }
         }
     }
 
